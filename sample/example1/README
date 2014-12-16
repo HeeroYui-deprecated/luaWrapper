@@ -1,0 +1,22 @@
+This folder includes a simple project to demonstrate how LuaWrapper may be used
+to bind your C++ class to Lua. 
+
+main.cpp contains a simple main function that will call luaopen_BankAccount
+then run the script given. 
+
+BankAccount.cpp and BankAccount.hpp contain a simple BankAccount class which you 
+can use to deposit and withdraw money from, and check the current balance. 
+
+LuaBankAccount.cpp contains the function wrappers. This is where the interesting
+part is.
+
+A visual studio project and makefile are provided, or you can use your own 
+tool chain to compile the example. Once compiled, run 
+
+    example1.exe example1.lua
+
+    or 
+
+    ./example1 example1.lua
+
+to see the code in action. 

@@ -1,0 +1,66 @@
+This folder includes a project that demonstrates some of the more sophisticated
+and complex features of LuaWrapper. Make sure you fully understand the code in 
+example 1 before reading the code here. Example 2 introduces some of the
+features contained in the luawrapperutil.hpp file which are prefixed with luaU_
+instead of luaW_
+
+# Automatic Getter and Setter Generation
+
+In example 1, all of the wrapper functions were written manually. It is very
+common need to write get or set function wrappers - so common in fact that this
+patter was extracted out into a templated function. In example 1, BankAccount
+had the following wrapper:
+
+int BankAccount_checkBalance(lua_State *L)
+{
+    BankAccount* account = luaW_check<BankAccount>(L, 1);
+    lua_pushnumber(L, account->checkBalance());
+    return 1;
+}
+
+static luaL_Reg BankAccount_metatable[] =
+{
+    ...
+    { "checkBalance", BankAccount_checkBalance },
+    ...
+};
+
+Rather than write code like that every time you need to create a get function, 
+you can instead just do this:
+
+    { "checkBalance", luaU_get<BankAccount, float, &BankAccount::checkBalance },
+
+This code will automatically instantiate a function wrapper that returns a 
+float, the result of a call to checkBalance. 
+
+# Generic push, to and check functions
+
+Normally, when you need to push a value to Lua or get a value from the stack, 
+you use a function like lua_pushnumber or lua_tonumber. luawrapperutil.hpp
+contains a generic version of these functions as well as specializations for
+the primitive types in C++. That means you can do things like this:
+
+int i = luaU_check<int>(L, 1);
+luaU_push<double>(L, 1.234);
+
+Additionally, it is possible to extend this functionality to non-primitive
+types. A common use is to create a wrapper for std::strings so that you may do 
+this:
+
+std::string str1 = luaU_check<std::string>(L, 1);
+std::string str2 = "Lua is awesome!"
+luaU_push<std::string>(L, str2);
+
+Examples of how to create your own luaU_push, luaU_to, and luaU_check can be 
+found in LuaCustomTypes.hpp
+
+A visual studio project and makefile are provided, or you can use your own 
+tool chain to compile the example. Once compiled, run 
+
+    example2.exe example2.lua
+
+    or 
+
+    ./example2 example2.lua
+
+to see the code in action. 
