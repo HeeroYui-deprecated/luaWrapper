@@ -37,6 +37,7 @@
 // If you are linking against Lua compiled in C++, define LUAW_NO_EXTERN_C
 #include <lua/lua.h>
 #include <lua/lauxlib.h>
+#include <memory>
 
 #define LUAW_POSTCTOR_KEY "__postctor"
 #define LUAW_EXTENDS_KEY "__extends"
@@ -59,12 +60,8 @@ inline int luaW_correctindex(lua_State* _L, int _index, int _correction) {
  * alternative option, you may select a different function when registering
  * your class.
  */
-template <typename T> T* luaW_defaultallocator(lua_State*) {
-	return new T();
-}
-
-template <typename T> void luaW_defaultdeallocator(lua_State*, T* _obj) {
-	delete _obj;
+template <typename T> std::shared_ptr<T> luaW_defaultallocator(lua_State* _L) {
+	return std::make_shared<T>();
 }
 
 /**
@@ -74,8 +71,8 @@ template <typename T> void luaW_defaultdeallocator(lua_State*, T* _obj) {
  * are using shared_ptr you would need to push the address of the object the
  * shared_ptr represents, rather than the address of the shared_ptr itself.
  */
-template <typename T> void luaW_defaultidentifier(lua_State* _L, T* _obj) {
-	lua_pushlightuserdata(_L, _obj);
+template <typename T> void luaW_defaultidentifier(lua_State* _L, std::shared_ptr<T> _obj) {
+	lua_pushlightuserdata(_L, _obj.get());
 }
 
 /**
@@ -87,12 +84,12 @@ template <typename T> void luaW_defaultidentifier(lua_State* _L, T* _obj) {
  * when and object is the type I want. This is only used internally.
  */
 struct luaW_Userdata {
-	luaW_Userdata(void* vptr = NULL, luaW_Userdata (*udcast)(const luaW_Userdata&) = NULL) :
+	luaW_Userdata(std::shared_ptr<void> vptr = NULL, luaW_Userdata (*udcast)(const luaW_Userdata&) = NULL) :
 	  data(vptr),
 	  cast(udcast) {
 		// nothing to do ...
 	}
-	void* data;
+	std::shared_ptr<void> data;
 	luaW_Userdata (*cast)(const luaW_Userdata&);
 };
 
@@ -103,18 +100,16 @@ struct luaW_Userdata {
 template <typename T> class LuaWrapper {
 	public:
 		static const char* classname;
-		static void (*identifier)(lua_State*, T*);
-		static T* (*allocator)(lua_State*);
-		static void (*deallocator)(lua_State*, T*);
+		static void (*identifier)(lua_State*, std::shared_ptr<T>);
+		static std::shared_ptr<T> (*allocator)(lua_State*);
 		static luaW_Userdata (*cast)(const luaW_Userdata&);
 		static void (*postconstructorrecurse)(lua_State* _L, int numargs);
 	private:
 		LuaWrapper();
 };
 template <typename T> const char* LuaWrapper<T>::classname;
-template <typename T> void (*LuaWrapper<T>::identifier)(lua_State*, T*);
-template <typename T> T* (*LuaWrapper<T>::allocator)(lua_State*);
-template <typename T> void (*LuaWrapper<T>::deallocator)(lua_State*, T*);
+template <typename T> void (*LuaWrapper<T>::identifier)(lua_State*, std::shared_ptr<T>);
+template <typename T> std::shared_ptr<T> (*LuaWrapper<T>::allocator)(lua_State*);
 template <typename T> luaW_Userdata (*LuaWrapper<T>::cast)(const luaW_Userdata&);
 template <typename T> void (*LuaWrapper<T>::postconstructorrecurse)(lua_State* _L, int _numargs);
 
@@ -124,7 +119,7 @@ template <typename T> void (*LuaWrapper<T>::postconstructorrecurse)(lua_State* _
  * internally.
  */
 template <typename T, typename U> luaW_Userdata luaW_cast(const luaW_Userdata& _obj) {
-	return luaW_Userdata(static_cast<U*>(static_cast<T*>(_obj.data)), LuaWrapper<U>::cast);
+	return luaW_Userdata(static_cast<U*>(std::static_pointer_cast<T>(_obj.data)), LuaWrapper<U>::cast);
 }
 
 template <typename T, typename U> void luaW_identify(lua_State* _L, T* _obj) {
@@ -174,7 +169,7 @@ template <typename T> bool luaW_is(lua_State *_L, int _index, bool _strict = fal
  * Converts the given acceptable index to a T*. That value must be of (or
  * convertable to) type T; otherwise, returns NULL.
  */
-template <typename T> T* luaW_to(lua_State* _L, int _index, bool _strict = false) {
+template <typename T> std::shared_ptr<T> luaW_to(lua_State* _L, int _index, bool _strict = false) {
 	if (luaW_is<T>(_L, _index, _strict)) {
 		luaW_Userdata* pud = static_cast<luaW_Userdata*>(lua_touserdata(_L, _index));
 		luaW_Userdata ud;
@@ -183,7 +178,7 @@ template <typename T> T* luaW_to(lua_State* _L, int _index, bool _strict = false
 			ud = pud->cast(*pud);
 			pud = &ud;
 		}
-		return static_cast<T*>(pud->data);
+		return std::static_pointer_cast<T>(pud->data);
 	}
 	return NULL;
 }
@@ -194,8 +189,8 @@ template <typename T> T* luaW_to(lua_State* _L, int _index, bool _strict = false
  * Converts the given acceptable index to a T*. That value must be of (or
  * convertable to) type T; otherwise, an error is raised.
  */
-template <typename T> T* luaW_check(lua_State* _L, int _index, bool _strict = false) {
-	T* obj = NULL;
+template <typename T> std::shared_ptr<T> luaW_check(lua_State* _L, int _index, bool _strict = false) {
+	std::shared_ptr<T> obj;
 	if (luaW_is<T>(_L, _index, _strict)) {
 		luaW_Userdata* pud = static_cast<luaW_Userdata*>(lua_touserdata(_L, _index));
 		luaW_Userdata ud;
@@ -203,7 +198,7 @@ template <typename T> T* luaW_check(lua_State* _L, int _index, bool _strict = fa
 			ud = pud->cast(*pud);
 			pud = &ud;
 		}
-		obj = (T*)pud->data;
+		obj = std::static_pointer_cast<T>(pud->data);
 	} else {
 		const char *msg = lua_pushfstring(_L, "%s expected, got %s", LuaWrapper<T>::classname, luaL_typename(_L, _index));
 		luaL_argerror(_L, _index, msg);
@@ -211,7 +206,7 @@ template <typename T> T* luaW_check(lua_State* _L, int _index, bool _strict = fa
 	return obj;
 }
 
-template <typename T> T* luaW_opt(lua_State* _L, int _index, T* _fallback = NULL, bool _strict = false) {
+template <typename T> std::shared_ptr<T> luaW_opt(lua_State* _L, int _index, std::shared_ptr<T> _fallback = nullptr, bool _strict = false) {
 	if (lua_isnil(_L, _index)) {
 		return _fallback;
 	} else {
@@ -226,7 +221,7 @@ template <typename T> T* luaW_opt(lua_State* _L, int _index, T* _fallback = NULL
  * the Lua environment, it will assign the existing storage table to it.
  * Otherwise, a new storage table will be created for it.
  */
-template <typename T> void luaW_push(lua_State* _L, T* _obj) {
+template <typename T> void luaW_push(lua_State* _L, std::shared_ptr<T> _obj) {
 	if (_obj) {
 		LuaWrapper<T>::identifier(_L, _obj); // ... id
 		luaW_wrapperfield<T>(_L, LUAW_CACHE_KEY); // ... id cache
@@ -262,7 +257,7 @@ template <typename T> void luaW_push(lua_State* _L, T* _obj) {
  * Returns true if luaW_hold took hold of the object, and false if it was
  * already held
  */
-template <typename T> bool luaW_hold(lua_State* _L, T* _obj) {
+template <typename T> bool luaW_hold(lua_State* _L, std::shared_ptr<T> _obj) {
 	luaW_wrapperfield<T>(_L, LUAW_HOLDS_KEY); // ... holds
 	LuaWrapper<T>::identifier(_L, _obj); // ... holds id
 	lua_pushvalue(_L, -1); // ... holds id id
@@ -346,7 +341,7 @@ template <typename T> void luaW_postconstructor(lua_State* _L, int _numargs) {
  */
 template <typename T> inline int luaW_new(lua_State* _L, int _numargs) {
 	// ... args...
-	T* obj = LuaWrapper<T>::allocator(_L);
+	std::shared_ptr<T> obj = LuaWrapper<T>::allocator(_L);
 	luaW_push<T>(_L, obj); // ... args... ud
 	luaW_hold<T>(_L, obj);
 	lua_insert(_L, -1 - _numargs); // ... ud args...
@@ -369,7 +364,7 @@ template <typename T> int luaW_new(lua_State* _L) {
  */
 template <typename T> int luaW_index(lua_State* _L) {
 	// obj key
-	T* obj = luaW_to<T>(_L, 1);
+	std::shared_ptr<T> obj = luaW_to<T>(_L, 1);
 	luaW_wrapperfield<T>(_L, LUAW_STORAGE_KEY); // obj key storage
 	LuaWrapper<T>::identifier(_L, obj); // obj key storage id
 	lua_gettable(_L, -2); // obj key storage store
@@ -400,7 +395,7 @@ template <typename T> int luaW_index(lua_State* _L) {
  */
 template <typename T> int luaW_newindex(lua_State* _L) {
 	// obj key value
-	T* obj = luaW_check<T>(_L, 1);
+	std::shared_ptr<T> obj = luaW_check<T>(_L, 1);
 	luaW_wrapperfield<T>(_L, LUAW_STORAGE_KEY); // obj key value storage
 	LuaWrapper<T>::identifier(_L, obj); // obj key value storage id
 	lua_pushvalue(_L, -1); // obj key value storage id id
@@ -428,13 +423,13 @@ template <typename T> int luaW_newindex(lua_State* _L) {
  */
 template <typename T> int luaW_gc(lua_State* _L) {
 	// obj
-	T* obj = luaW_to<T>(_L, 1);
+	std::shared_ptr<T> obj = luaW_to<T>(_L, 1);
 	LuaWrapper<T>::identifier(_L, obj); // obj key value storage id
 	luaW_wrapperfield<T>(_L, LUAW_HOLDS_KEY); // obj id counts count holds
 	lua_pushvalue(_L, 2); // obj id counts count holds id
 	lua_gettable(_L, -2); // obj id counts count holds hold
-	if (lua_toboolean(_L, -1) && LuaWrapper<T>::deallocator) {
-		LuaWrapper<T>::deallocator(_L, obj);
+	if (lua_toboolean(_L, -1)) {
+		obj.reset();
 	}
 	luaW_wrapperfield<T>(_L, LUAW_STORAGE_KEY); // obj id counts count holds hold storage
 	lua_pushvalue(_L, 2); // obj id counts count holds hold storage id
@@ -531,14 +526,12 @@ template <typename T> void luaW_setfuncs(lua_State* _L,
                                          const char* _classname,
                                          const luaL_Reg* _table,
                                          const luaL_Reg* _metatable,
-                                         T* (*_allocator)(lua_State*) = luaW_defaultallocator<T>,
-                                         void (*_deallocator)(lua_State*, T*) = luaW_defaultdeallocator<T>,
-                                         void (*_identifier)(lua_State*, T*) = luaW_defaultidentifier<T>) {
+                                         std::shared_ptr<T> (*_allocator)(lua_State*),
+                                         void (*_identifier)(lua_State*, std::shared_ptr<T>)) {
 	luaW_initialize(_L);
 	LuaWrapper<T>::classname = _classname;
 	LuaWrapper<T>::identifier = _identifier;
 	LuaWrapper<T>::allocator = _allocator;
-	LuaWrapper<T>::deallocator = _deallocator;
 	const luaL_Reg defaulttable[] = {
 		{ "new", luaW_new<T> },
 		{ NULL, NULL }
@@ -575,15 +568,46 @@ template <typename T> void luaW_setfuncs(lua_State* _L,
 	luaW_registerfuncs(_L, defaultmetatable, _metatable); // ... T mt
 	lua_setfield(_L, -2, "metatable"); // ... T
 }
+template <typename T> void luaW_setfuncs(lua_State* _L,
+                                         const char* _classname,
+                                         const luaL_Reg* _table,
+                                         const luaL_Reg* _metatable,
+                                         std::shared_ptr<T> (*_allocator)(lua_State*)) {
+	luaW_setfuncs(_L, _classname, _table, _metatable, _allocator, luaW_defaultidentifier<T>);
+}
+template <typename T> void luaW_setfuncs(lua_State* _L,
+                                         const char* _classname,
+                                         const luaL_Reg* _table,
+                                         const luaL_Reg* _metatable) {
+	luaW_setfuncs(_L, _classname, _table, _metatable, luaW_defaultallocator<T>, luaW_defaultidentifier<T>);
+}
 
 template <typename T> void luaW_register(lua_State* _L,
                                          const char* _classname,
                                          const luaL_Reg* _table,
                                          const luaL_Reg* _metatable,
-                                         T* (*_allocator)(lua_State*) = luaW_defaultallocator<T>,
-                                         void (*_deallocator)(lua_State*, T*) = luaW_defaultdeallocator<T>,
-                                         void (*_identifier)(lua_State*, T*) = luaW_defaultidentifier<T>) {
-	luaW_setfuncs(_L, _classname, _table, _metatable, _allocator, _deallocator, _identifier); // ... T
+                                         std::shared_ptr<T> (*_allocator)(lua_State*),
+                                         void (*_identifier)(lua_State*, std::shared_ptr<T>)) {
+	luaW_setfuncs(_L, _classname, _table, _metatable, _allocator, _identifier); // ... T
+	lua_pushvalue(_L, -1); // ... T T
+	lua_setglobal(_L, _classname); // ... T
+}
+
+template <typename T> void luaW_register(lua_State* _L,
+                                         const char* _classname,
+                                         const luaL_Reg* _table,
+                                         const luaL_Reg* _metatable,
+                                         std::shared_ptr<T> (*_allocator)(lua_State*)) {
+	luaW_setfuncs(_L, _classname, _table, _metatable, _allocator, luaW_defaultidentifier<T>);
+	lua_pushvalue(_L, -1); // ... T T
+	lua_setglobal(_L, _classname); // ... T
+}
+
+template <typename T> void luaW_register(lua_State* _L,
+                                         const char* _classname,
+                                         const luaL_Reg* _table,
+                                         const luaL_Reg* _metatable) {
+	luaW_setfuncs(_L, _classname, _table, _metatable, luaW_defaultallocator<T>, luaW_defaultidentifier<T>); // ... T
 	lua_pushvalue(_L, -1); // ... T T
 	lua_setglobal(_L, _classname); // ... T
 }
@@ -641,3 +665,6 @@ template <typename T, typename U> void luaW_extend(lua_State* _L) {
 }
 
 #endif
+
+#include <luaWrapper/luaWrapperUtil.hpp>
+//#include <luaWrapper/luaWrapperStd.hpp>

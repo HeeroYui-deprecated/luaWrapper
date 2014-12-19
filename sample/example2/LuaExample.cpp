@@ -132,9 +132,9 @@ static luaL_Reg Example_metatable[] = {
 	{ NULL, NULL }
 };
 
-int luaopen_Example(lua_State* L)
+int luaopen_Example(lua_State* _L)
 {
-    luaW_register<Example>(L, "Example", NULL, Example_metatable);
+    luaW_register<Example>(_L, "Example", NULL, Example_metatable);
     return 1;
 }
 

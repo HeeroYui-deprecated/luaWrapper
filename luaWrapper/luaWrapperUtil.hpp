@@ -41,155 +41,58 @@ template <typename T> struct luaW_remove_cr {
  * LuaWrapper, especially with small objects.
  */
 
-template<typename U, typename = void> struct luaU_Impl {
-	static U luaU_check(lua_State* _L, int _index);
-	static U luaU_to(lua_State* _L, int _index);
-	static void luaU_push(lua_State* _L, const U& _value);
-};
+template<typename U> U luaU_check(lua_State* _L, int _index);
+template<typename U> U luaU_to(lua_State* _L, int _index);
+template<typename U> void luaU_push(lua_State* _L, const U& _value);
 
+/*
 template<typename U> U luaU_check(lua_State* _L, int _index) {
-	return luaU_Impl<U>::luaU_check(_L, _index);
+	return implem_luaU_check<U>(_L, _index);
 }
 template<typename U> U luaU_to(lua_State* _L, int _index) {
-	return luaU_Impl<U>::luaU_to(_L, _index);
+	return implem_luaU_to<U>(_L, _index);
 }
 template<typename U> void luaU_push(lua_State* _L, const U& _value) {
-	luaU_Impl<U>::luaU_push(_L, _value);
+	implem_luaU_push<U>(_L, _value);
 }
+*/
 
-/** This is slightly different than the previous three functions in that you
+/**
+ * This is slightly different than the previous three functions in that you
  * shouldn't need to write your own version of it, since it uses luaU_check
  * automatically.
  */
 template<typename U> U luaU_opt(lua_State* _L, int _index, const U& _fallback = U()) {
-	if (lua_isnil(_L, _index))
+	if (lua_isnil(_L, _index)) {
 		return _fallback;
-	else
-		return luaU_Impl<U>::luaU_check(_L, _index);
+	} else {
+		return luaU_check<U>(_L, _index);
+	}
+}
+/*
+template<typename T> T implem_luaU_check<T, typename LUAW_STD::enable_if<LUAW_STD::is_enum<T>::value>::type>(lua_State* _L, int _index) {
+	return static_cast<T>(luaL_checkinteger(_L, _index));
+}
+template<typename T> T implem_luaU_to<T, typename LUAW_STD::enable_if<LUAW_STD::is_enum<T>::value>::type>(lua_State* _L, int _index) {
+	return static_cast<T>(lua_tointeger(_L, _index));
+}
+template<typename T> void implem_luaU_push<T, typename LUAW_STD::enable_if<LUAW_STD::is_enum<T>::value>::type>(lua_State* _L, const T& _value) {
+	lua_pushnumber(_L, static_cast<int>(_value));
 }
 
-template<> struct luaU_Impl<bool> {
-	static bool luaU_check(lua_State* _L, int _index) {
-		return lua_toboolean(_L, _index) != 0;
-	}
-	static bool luaU_to(lua_State* _L, int _index) {
-		return lua_toboolean(_L, _index) != 0;
-	}
-	static void luaU_push(lua_State* _L, const bool& _value) {
-		lua_pushboolean(_L, _value);
-	}
-};
-
-template<> struct luaU_Impl<const char*> {
-	static const char* luaU_check(lua_State* _L, int _index) {
-		return luaL_checkstring(_L, _index);
-	}
-	static const char* luaU_to(lua_State* _L, int _index) {
-		return lua_tostring(_L, _index);
-	}
-	static void luaU_push(lua_State* _L, const char* const& _value) {
-		lua_pushstring(_L, _value);
-	}
-};
-
-template<> struct luaU_Impl<unsigned int> {
-	static unsigned int luaU_check(lua_State* _L, int _index) {
-		return static_cast<unsigned int>(luaL_checkinteger(_L, _index));
-	}
-	static unsigned int luaU_to(lua_State* _L, int _index) {
-		return static_cast<unsigned int>(lua_tointeger(_L, _index));
-	}
-	static void luaU_push(lua_State* _L, const unsigned int& _value) {
-		lua_pushinteger(_L, _value);
-	}
-};
-
-template<> struct luaU_Impl<int> {
-	static int luaU_check(lua_State* _L, int _index) {
-		return static_cast<int>(luaL_checkinteger(_L, _index));
-	}
-	static int luaU_to(lua_State* _L, int _index) {
-		return static_cast<int>(lua_tointeger(_L, _index));
-	}
-	static void luaU_push(lua_State* _L, const int& _value) {
-		lua_pushinteger(_L, _value);
-	}
-};
-
-template<> struct luaU_Impl<unsigned char> {
-	static unsigned char luaU_check(lua_State* _L, int _index) {
-		return static_cast<unsigned char>(luaL_checkinteger(_L, _index));
-	}
-	static unsigned char luaU_to(lua_State* _L, int _index) {
-		return static_cast<unsigned char>(lua_tointeger(_L, _index));
-	}
-	static void luaU_push(lua_State* _L, const unsigned char& _value) {
-		lua_pushinteger(_L, _value);
-	}
-};
-
-template<> struct luaU_Impl<char> {
-	static char luaU_check(lua_State* _L, int _index) {
-		return static_cast<char>(luaL_checkinteger(_L, _index));
-	}
-	static char luaU_to(lua_State* _L, int _index) {
-		return static_cast<char>(lua_tointeger(_L, _index));
-	}
-	static void luaU_push(lua_State* _L, const char& _value) {
-		lua_pushinteger(_L, _value);
-	}
-};
-
-template<> struct luaU_Impl<float> {
-	static float luaU_check(lua_State* _L, int _index) {
-		return static_cast<float>(luaL_checknumber(_L, _index));
-	}
-	static float luaU_to(lua_State* _L, int _index) {
-		return static_cast<float>(lua_tonumber(_L, _index));
-	}
-	static void luaU_push(lua_State* _L, const float& _value) {
-		lua_pushnumber(_L, _value);
-	}
-};
-
-template<> struct luaU_Impl<double> {
-	static double luaU_check(lua_State* _L, int _index) {
-		return static_cast<double>(luaL_checknumber(_L, _index));
-	}
-	static double luaU_to(lua_State* _L, int _index) {
-		return static_cast<double>(lua_tonumber(_L, _index));
-	}
-	static void luaU_push(lua_State* _L, const double& _value) {
-		lua_pushnumber(_L, _value);
-	}
-};
-
-template<typename T> struct luaU_Impl<T, typename LUAW_STD::enable_if<LUAW_STD::is_enum<T>::value>::type> {
-	static T luaU_check(lua_State* _L, int _index) {
-		return static_cast<T>(luaL_checkinteger(_L, _index));
-	}
-	static T luaU_to(lua_State* _L, int _index) {
-		return static_cast<T>(lua_tointeger(_L, _index));
-	}
-	static void luaU_push(lua_State* _L, const T& _value) {
-		lua_pushnumber(_L, static_cast<int>(_value));
-	}
-};
-
-template<typename T> struct luaU_Impl<T*, typename LUAW_STD::enable_if<LUAW_STD::is_class<T>::value>::type> {
-	static T* luaU_check(lua_State* _L, int _index) {
-		return luaW_check<T>(_L, _index);
-	}
-	static T* luaU_to(lua_State* _L, int _index) {
-		return luaW_to<T>(_L, _index);
-	}
-	static void luaU_push(lua_State* _L, T*& _value) {
-		luaW_push <T>(_L, _value);
-	}
-	static void luaU_push(lua_State* _L, T* _value) {
-		luaW_push <T>(_L, _value);
-	}
-};
+template<typename T> T* implem_luaU_check<T*, typename LUAW_STD::enable_if<LUAW_STD::is_class<T>::value>::type>(lua_State* _L, int _index) {
+	return luaW_check<T>(_L, _index);
+}
+template<typename T> T* implem_luaU_to<T*, typename LUAW_STD::enable_if<LUAW_STD::is_class<T>::value>::type>(lua_State* _L, int _index) {
+	return luaW_to<T>(_L, _index);
+}
+template<typename T> void implem_luaU_push<T*, typename LUAW_STD::enable_if<LUAW_STD::is_class<T>::value>::type>(lua_State* _L, T*& _value) {
+	luaW_push <T>(_L, _value);
+}
+template<typename T> void implem_luaU_push<T*, typename LUAW_STD::enable_if<LUAW_STD::is_class<T>::value>::type>(lua_State* _L, T* _value) {
+	luaW_push <T>(_L, _value);
+}
+*/
 
 /**
  * These are just some functions I've always felt should exist
@@ -590,7 +493,7 @@ template<class T, class ReturnType, class... Args, ReturnType(T::*MemberFunc)(Ar
 		}
 	private:
 		template<int... indices> static int callImpl(lua_State* _L, luaU_IntPack<indices...>) {
-			luaU_push<ReturnType>(_L, (luaW_check<T>(_L, 1)->*MemberFunc)(luaU_check<typename luaW_remove_cr<Args>::type>(_L, indices)...));
+			luaU_push<ReturnType>(_L, ((*luaW_check<T>(_L, 1)).*MemberFunc)(luaU_check<typename luaW_remove_cr<Args>::type>(_L, indices)...));
 			return 1;
 		}
 };
@@ -602,7 +505,7 @@ template<class T, class... Args, void(T::*MemberFunc)(Args...)> struct luaU_Memb
 		}
 	private:
 		template<int... indices> static int callImpl(lua_State* _L, luaU_IntPack<indices...>) {
-			(luaW_check<T>(_L, 1)->*MemberFunc)(luaU_check<typename luaW_remove_cr<Args>::type>(_L, indices)...);
+			((*luaW_check<T>(_L, 1)).*MemberFunc)(luaU_check<typename luaW_remove_cr<Args>::type>(_L, indices)...);
 			return 0;
 		}
 };
