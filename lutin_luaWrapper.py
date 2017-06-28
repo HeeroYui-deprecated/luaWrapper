@@ -1,28 +1,44 @@
 #!/usr/bin/python
-import lutinModule as module
-import lutinTools as tools
+import lutin.module as module
+import lutin.tools as tools
+import lutin.debug as debug
+import os
+
+def get_type():
+	return "LIBRARY"
+
+def get_name():
+	return "luwWrapper"
 
 def get_desc():
 	return "luwWrapper : simple Lua automatic wrapper"
 
+def get_licence():
+	return "MPL-2"
 
-def create(target):
-	# module name is 'edn' and type binary.
-	myModule = module.Module(__file__, 'luaWrapper', 'LIBRARY')
+def get_compagny_type():
+	return "org"
 
-	# name of the dependency
-	myModule.add_module_depend('lua')
-	
-	# add extra compilation flags :
-	myModule.add_extra_compile_flags()
-	# add the file to compile:
-	myModule.add_src_file([
+def get_compagny_name():
+	return "Edouard DUPIN"
+
+def get_maintainer():
+	return ["Mr DUPIN Edouard <yui.heero@gmail.com>"]
+
+def get_version():
+	return [0,1,"dev"]
+
+
+def configure(target, my_module):
+	my_module.add_extra_flags()
+	my_module.add_depend('lua')
+	my_module.add_src_file([
 		'luaWrapper/luaWrapperStd.cpp'
 		])
-	
-	myModule.add_export_path(tools.get_current_path(__file__))
-	
-	# add the currrent module at the 
-	return myModule
+	my_module.add_header_file([
+		'luaWrapper/luaWrapper.hpp'
+		'luaWrapper/luaWrapperUtils.hpp'
+		])
+	return my_module
 
 
