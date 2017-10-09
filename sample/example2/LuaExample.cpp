@@ -1,5 +1,5 @@
 #include <iostream>
-#include <string>
+#include <etk/String.hpp>
 
 #include <lua/lua.h>
 
@@ -52,9 +52,9 @@ static luaL_Reg Example_metatable[] = {
 	{ "SetCString", luaU_set<Example, const char*, &Example::m_cstring> },
 	{ "CString", luaU_getset<Example, const char*, &Example::m_cstring> },
 	
-	{ "GetCPPString", luaU_get<Example, std::string, &Example::m_cppstring> },
-	{ "SetCPPString", luaU_set<Example, std::string, &Example::m_cppstring> },
-	{ "CPPString", luaU_getset<Example, std::string, &Example::m_cppstring> },
+	{ "GetCPPString", luaU_get<Example, etk::String, &Example::m_cppstring> },
+	{ "SetCPPString", luaU_set<Example, etk::String, &Example::m_cppstring> },
+	{ "CPPString", luaU_getset<Example, etk::String, &Example::m_cppstring> },
 	
 	{ "GetVec", luaU_get<Example, Vector2D, &Example::m_vec> },
 	{ "SetVec", luaU_set<Example, Vector2D, &Example::m_vec> },
@@ -115,10 +115,10 @@ static luaL_Reg Example_metatable[] = {
 	
 	// In order to use luaU_get and luaU_set on non-primitive types, you must define luaU_to
 	// and luaU_check for that type.
-	// See LuaCustomTypes.hpp for an example involving std::string and Vector2D
-	{ "GetCPPStringFunc", luaU_get<Example, std::string, &Example::GetCPPString> },
-	{ "SetCPPStringFunc", luaU_set<Example, std::string, &Example::SetCPPString> },
-	{ "CPPStringFunc", luaU_getset<Example, std::string, &Example::GetCPPString, &Example::SetCPPString> },
+	// See LuaCustomTypes.hpp for an example involving etk::String and Vector2D
+	{ "GetCPPStringFunc", luaU_get<Example, etk::String, &Example::GetCPPString> },
+	{ "SetCPPStringFunc", luaU_set<Example, etk::String, &Example::SetCPPString> },
+	{ "CPPStringFunc", luaU_getset<Example, etk::String, &Example::GetCPPString, &Example::SetCPPString> },
 	
 	{ "GetVecFunc", luaU_get<Example, Vector2D, &Example::GetVec> },
 	{ "SetSetFunc", luaU_set<Example, Vector2D, &Example::SetVec> },

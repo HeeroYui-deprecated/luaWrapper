@@ -1,5 +1,5 @@
 #include "Example.hpp"
-#include <string>
+#include <etk/String.hpp>
 #include <iostream>
 
 // These are just a bunch of generic getters and setters for
@@ -21,7 +21,7 @@ const char* Example::GetCString() const {
 	return m_cstring;
 }
 
-const std::string& Example::GetCPPString() const {
+const etk::String& Example::GetCPPString() const {
 	return m_cppstring;
 }
 
@@ -57,7 +57,7 @@ void Example::SetCString(const char* _val) {
 	m_cstring = _val;
 }
 
-void Example::SetCPPString(const std::string& _val) {
+void Example::SetCPPString(const etk::String& _val) {
 	m_cppstring = _val;
 }
 

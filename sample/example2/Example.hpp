@@ -1,7 +1,7 @@
 #ifndef EXAMPLE_HPP_
 #define EXAMPLE_HPP_
 
-#include <string>
+#include <etk/String.hpp>
 
 #include "Vector2D.hpp"
 
@@ -24,7 +24,7 @@ class Example {
 		int m_integer;
 		unsigned int m_uinteger;
 		const char* m_cstring;
-		std::string m_cppstring;
+		etk::String m_cppstring;
 		double m_number;
 		float m_floatnumber;
 		Example* m_ptr;
@@ -34,7 +34,7 @@ class Example {
 		int GetInteger() const;
 		unsigned int GetUInteger() const;
 		const char* GetCString() const;
-		const std::string& GetCPPString() const;
+		const etk::String& GetCPPString() const;
 		double GetNumber() const;
 		float GetFloatNumber() const;
 		Example* GetPtr() const;
@@ -44,7 +44,7 @@ class Example {
 		void SetInteger(int _val);
 		void SetUInteger(unsigned int _val);
 		void SetCString(const char* _val);
-		void SetCPPString(const std::string& _val);
+		void SetCPPString(const etk::String& _val);
 		void SetNumber(double _val);
 		void SetFloatNumber(float _val);
 		void SetPtr(Example* _val);

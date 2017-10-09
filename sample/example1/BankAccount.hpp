@@ -1,7 +1,7 @@
 #ifndef EXAMPLE_HPP_
 #define EXAMPLE_HPP_
 
-#include <string>
+#include <etk/String.hpp>
 #include <iostream>
 
 class BankAccount {
