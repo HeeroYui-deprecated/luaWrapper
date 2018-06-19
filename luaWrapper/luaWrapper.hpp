@@ -206,7 +206,7 @@ template <typename T> std::shared_ptr<T> luaW_check(lua_State* _L, int _index, b
 	return obj;
 }
 
-template <typename T> std::shared_ptr<T> luaW_opt(lua_State* _L, int _index, std::shared_ptr<T> _fallback = nullptr, bool _strict = false) {
+template <typename T> std::shared_ptr<T> luaW_opt(lua_State* _L, int _index, std::shared_ptr<T> _fallback = null, bool _strict = false) {
 	if (lua_isnil(_L, _index)) {
 		return _fallback;
 	} else {
