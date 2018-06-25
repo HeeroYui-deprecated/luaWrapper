@@ -1,5 +1,8 @@
 -- create a bank account and do some account action:
 alicesaccount = BankAccount.new("Alice", 100)
+alicesaccount = BankAccount.new("Alice", 100)
+alicesaccount = BankAccount.new("Alice", 100)
+alicesaccount = BankAccount.new("Alice", 100)
 alicesaccount:deposit(20);
 alicesaccount:deposit(30);
 alicesaccount:deposit(40);

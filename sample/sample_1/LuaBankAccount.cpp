@@ -9,15 +9,17 @@
 
 using namespace std;
 
+ETK_DECLARE_TYPE(BankAccount);
+
 /**
  * Allocator
  *
  * Types that do not have a default contructor require you to write an allocator function.
  * This function is passed to luaW_register.
  */
-ememory::SharedPtr<BankAccount> BankAccount_new(lua_State *_L) {
-    const char* owner = luaL_checkstring(_L, 1);
-    float balance = luaL_checknumber(_L, 2);
+ememory::SharedPtr<BankAccount> BankAccount_new(lua_State *_luaState) {
+    const char* owner = luaL_checkstring(_luaState, 1);
+    float balance = luaL_checknumber(_luaState, 2);
     return ememory::makeShared<BankAccount>(owner, balance);
 }
 
@@ -27,8 +29,8 @@ ememory::SharedPtr<BankAccount> BankAccount_new(lua_State *_L) {
  * These functions can be called directly from the BankAccount table in lua
  */
 
-int BankAccount_checkTotalMoneyInBank(lua_State *_L) {
-    lua_pushnumber(_L, BankAccount::checkTotalMoneyInBank());
+int BankAccount_checkTotalMoneyInBank(lua_State *_luaState) {
+    lua_pushnumber(_luaState, BankAccount::checkTotalMoneyInBank());
     return 1;
 }
 
@@ -40,29 +42,29 @@ int BankAccount_checkTotalMoneyInBank(lua_State *_L) {
  * by the use of special a __index metatmethod that is set up by LuaWrapper.
  */
 
-int BankAccount_getOwnerName(lua_State *_L) {
-    auto account = luaW_check<BankAccount>(_L, 1);
-    lua_pushstring(_L, account->getOwnerName());
+int BankAccount_getOwnerName(lua_State *_luaState) {
+    auto account = luaW_check<BankAccount>(_luaState, 1);
+    lua_pushstring(_luaState, account->getOwnerName());
     return 1;
 }
 
-int BankAccount_deposit(lua_State* _L) {
-    auto account = luaW_check<BankAccount>(_L, 1);
-    float amount = luaL_checknumber(_L, 2);
+int BankAccount_deposit(lua_State* _luaState) {
+    auto account = luaW_check<BankAccount>(_luaState, 1);
+    float amount = luaL_checknumber(_luaState, 2);
     account->deposit(amount);
     return 0;
 }
 
-int BankAccount_withdraw(lua_State* _L) {
-    auto account = luaW_check<BankAccount>(_L, 1);
-    float amount = luaL_checknumber(_L, 2);
+int BankAccount_withdraw(lua_State* _luaState) {
+    auto account = luaW_check<BankAccount>(_luaState, 1);
+    float amount = luaL_checknumber(_luaState, 2);
     account->withdraw(amount);
     return 0;
 }
 
-int BankAccount_checkBalance(lua_State* _L) {
-    auto account = luaW_check<BankAccount>(_L, 1);
-    lua_pushnumber(_L, account->checkBalance());
+int BankAccount_checkBalance(lua_State* _luaState) {
+    auto account = luaW_check<BankAccount>(_luaState, 1);
+    lua_pushnumber(_luaState, account->checkBalance());
     return 1;
 }
 
@@ -79,8 +81,8 @@ static luaL_Reg BankAccount_metatable[] = {
     { NULL, NULL }
 };
 
-int luaopen_BankAccount(lua_State* _L) {
-    luaW_register<BankAccount>(_L,
+int luaopen_BankAccount(lua_State* _luaState) {
+    luaW_register<BankAccount>(_luaState,
         "BankAccount",
         BankAccount_table,
         BankAccount_metatable,

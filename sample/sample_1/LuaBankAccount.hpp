@@ -1,7 +1,4 @@
-#ifndef LUAEXAMPLE_HPP_
-#define LUAEXAMPLE_HPP_
+#pragma once
 
 struct lua_State;
-int luaopen_BankAccount(lua_State* _L);
-
-#endif // LUAEXAMPLE_HPP_
+int luaopen_BankAccount(lua_State* _luaState);

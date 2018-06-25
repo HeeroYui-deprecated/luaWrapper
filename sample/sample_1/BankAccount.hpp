@@ -7,6 +7,7 @@
 class BankAccount {
 	public:
 		BankAccount(const char* _owner, float _balance);
+		~BankAccount();
 		const char* getOwnerName() const;
 		void deposit(float _amount);
 		void withdraw(float _amount);
