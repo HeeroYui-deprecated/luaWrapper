@@ -31,14 +31,17 @@ def get_version():
 
 def configure(target, my_module):
 	my_module.add_extra_flags()
-	my_module.add_depend('lua')
+	my_module.add_depend([
+	    'lua',
+	    'ememory'
+	    ])
 	my_module.add_src_file([
-		'luaWrapper/luaWrapperStd.cpp'
-		])
+	    'luaWrapper/luaWrapperEtk.cpp',
+	    ])
 	my_module.add_header_file([
-		'luaWrapper/luaWrapper.hpp'
-		'luaWrapper/luaWrapperUtils.hpp'
-		])
+	    'luaWrapper/luaWrapper.hpp',
+	    'luaWrapper/luaWrapperUtil.hpp',
+	    ])
 	return my_module
 
 

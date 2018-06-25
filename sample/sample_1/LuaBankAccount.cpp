@@ -15,11 +15,10 @@ using namespace std;
  * Types that do not have a default contructor require you to write an allocator function.
  * This function is passed to luaW_register.
  */
-
-BankAccount* BankAccount_new(lua_State *_L) {
+ememory::SharedPtr<BankAccount> BankAccount_new(lua_State *_L) {
     const char* owner = luaL_checkstring(_L, 1);
     float balance = luaL_checknumber(_L, 2);
-    return new BankAccount(owner, balance);
+    return ememory::makeShared<BankAccount>(owner, balance);
 }
 
 /**
@@ -42,27 +41,27 @@ int BankAccount_checkTotalMoneyInBank(lua_State *_L) {
  */
 
 int BankAccount_getOwnerName(lua_State *_L) {
-    BankAccount* account = luaW_check<BankAccount>(_L, 1);
+    auto account = luaW_check<BankAccount>(_L, 1);
     lua_pushstring(_L, account->getOwnerName());
     return 1;
 }
 
 int BankAccount_deposit(lua_State* _L) {
-    BankAccount* account = luaW_check<BankAccount>(_L, 1);
+    auto account = luaW_check<BankAccount>(_L, 1);
     float amount = luaL_checknumber(_L, 2);
     account->deposit(amount);
     return 0;
 }
 
 int BankAccount_withdraw(lua_State* _L) {
-    BankAccount* account = luaW_check<BankAccount>(_L, 1);
+    auto account = luaW_check<BankAccount>(_L, 1);
     float amount = luaL_checknumber(_L, 2);
     account->withdraw(amount);
     return 0;
 }
 
 int BankAccount_checkBalance(lua_State* _L) {
-    BankAccount* account = luaW_check<BankAccount>(_L, 1);
+    auto account = luaW_check<BankAccount>(_L, 1);
     lua_pushnumber(_L, account->checkBalance());
     return 1;
 }

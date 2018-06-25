@@ -14,8 +14,7 @@
  * This file contains the additional functions that I've added but that do
  * not really belong in the core API.
  */
-#ifndef __LUA__WRAPPER__UTILS_HPP__
-#define __LUA__WRAPPER__UTILS_HPP__
+#pragma once
 
 #include <luaWrapper/luaWrapper.hpp>
 
@@ -624,17 +623,20 @@ template <typename T> int luaU_build(lua_State* _L) {
  * }
  */
 template <typename T> void luaU_store(lua_State* _L, int _index, const char* _storagetable, const char* _key = NULL) {
-	// ... store ... obj
-	lua_getfield(_L, _index, _storagetable); // ... store ... obj store.storagetable
+	// ... store ... obj store.storagetable
+	lua_getfield(_L, _index, _storagetable);
 	if (_key) {
-		lua_pushstring(_L, _key); // ... store ... obj store.storagetable key
+		// ... store ... obj store.storagetable key
+		lua_pushstring(_L, _key);
 	} else {
-		LuaWrapper<T>::identifier(_L, luaW_to<T>(_L, -2)); // ... store ... obj store.storagetable key
+		// ... store ... obj store.storagetable key
+		LuaWrapper<T>::identifier(_L, luaW_to<T>(_L, -2));
 	}
-	lua_pushvalue(_L, -3); // ... store ... obj store.storagetable key obj
-	lua_settable(_L, -3); // ... store ... obj store.storagetable
-	lua_pop(_L, 1); // ... store ... obj
+	// ... store ... obj store.storagetable key obj
+	lua_pushvalue(_L, -3);
+	// ... store ... obj store.storagetable
+	lua_settable(_L, -3);
+	// ... store ... obj
+	lua_pop(_L, 1);
 }
 
-
-#endif
