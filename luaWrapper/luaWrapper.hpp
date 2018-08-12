@@ -38,6 +38,7 @@
 #include <lua/lauxlib.h>
 #include <ememory/memory.hpp>
 #include <etk/typeInfo.hpp>
+#include <etk/Allocator.hpp>
 
 #define LUAW_POSTCTOR_KEY "__postctor"
 #define LUAW_EXTENDS_KEY "__extends"
@@ -246,7 +247,7 @@ void luaW_push(lua_State* _luaState,
 			lua_pop(_luaState, 1); // ... id cache
 			lua_insert(_luaState, -2); // ... cache id
 			// placement new creation (need to initilaize the sructure:
-			luaW_Userdata* ud = new (lua_newuserdata(_luaState, sizeof(luaW_Userdata))) luaW_Userdata(_obj, ETK_GET_TYPE_ID(LUAW_TYPE)); // ... cache id obj
+			luaW_Userdata* ud = new ((char*)lua_newuserdata(_luaState, sizeof(luaW_Userdata))) luaW_Userdata(_obj, ETK_GET_TYPE_ID(LUAW_TYPE)); // ... cache id obj
 			lua_pushvalue(_luaState, -1); // ... cache id obj obj
 			lua_insert(_luaState, -4); // ... obj cache id obj
 			lua_settable(_luaState, -3); // ... obj cache

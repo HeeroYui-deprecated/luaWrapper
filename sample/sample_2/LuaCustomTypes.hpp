@@ -1,5 +1,4 @@
-#ifndef LUA_CUSTOM_TYPES_H__
-#define LUA_CUSTOM_TYPES_H__
+#pragma once
 
 #include <etk/String.hpp>
 
@@ -57,4 +56,3 @@ template<> struct luaU_Impl<Vector2D> {
     }
 };
 
-#endif

@@ -1,5 +1,4 @@
-#ifndef EXAMPLE_HPP_
-#define EXAMPLE_HPP_
+#pragma once
 
 #include <etk/String.hpp>
 #include <iostream>
@@ -19,4 +18,3 @@ class BankAccount {
 		static float s_totalMoneyInBank;
 };
 
-#endif // EXAMPLE_HPP_

@@ -1,5 +1,4 @@
-#ifndef EXAMPLE_HPP_
-#define EXAMPLE_HPP_
+#pragma once
 
 #include <etk/String.hpp>
 
@@ -57,4 +56,3 @@ class Example {
 		int DoSomethingElse(float _f);
 };
 
-#endif
