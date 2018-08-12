@@ -16,7 +16,7 @@ static void usage() {
 }
 
 int main(int _argc, const char *_argv[]) {
-	TEST_PRINT("START SAMPLE 1");
+	TEST_PRINT("START SAMPLE 2");
 	etk::init(_argc, _argv);
 	etk::String inputFileName;
 	for (int32_t iii=0; iii<_argc ; ++iii) {
@@ -39,5 +39,6 @@ int main(int _argc, const char *_argv[]) {
 		TEST_PRINT(lua_tostring(L, -1));
 	}
 	lua_close(L);
+	TEST_PRINT("END SAMPLE 2");
 	return 0;
 }

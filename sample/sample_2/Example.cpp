@@ -1,6 +1,9 @@
 #include "Example.hpp"
 #include <etk/String.hpp>
+#include <etk/typeInfo.hpp>
 #include <iostream>
+
+ETK_DECLARE_TYPE(Example);
 
 // These are just a bunch of generic getters and setters for
 // values in the Example class

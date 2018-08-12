@@ -6,28 +6,17 @@
 
 class Example {
 	public:
-		Example() :
-		  m_boolean(),
-		  m_integer(),
-		  m_uinteger(),
-		  m_cstring(""),
-		  m_cppstring(""),
-		  m_number(),
-		  m_floatnumber(),
-		  m_ptr(),
-		  m_vec() {
-			
-		}
+		Example() { }
 		
-		bool m_boolean;
-		int m_integer;
-		unsigned int m_uinteger;
-		const char* m_cstring;
-		etk::String m_cppstring;
-		double m_number;
-		float m_floatnumber;
-		Example* m_ptr;
-		Vector2D m_vec;
+		bool m_boolean = false;
+		int m_integer = -76543;
+		unsigned int m_uinteger = 765432;
+		const char* m_cstring = "default C string";
+		etk::String m_cppstring = "default C++ string";
+		double m_number = 0.12345;
+		float m_floatnumber = 0.23456f;
+		Example* m_ptr = null;
+		Vector2D m_vec = Vector2D(4,6);
 		
 		bool GetBoolean() const;
 		int GetInteger() const;

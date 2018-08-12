@@ -44,18 +44,6 @@ template<typename U> U luaU_check(lua_State* _L, int _index);
 template<typename U> U luaU_to(lua_State* _L, int _index);
 template<typename U> void luaU_push(lua_State* _L, const U& _value);
 
-/*
-template<typename U> U luaU_check(lua_State* _L, int _index) {
-	return implem_luaU_check<U>(_L, _index);
-}
-template<typename U> U luaU_to(lua_State* _L, int _index) {
-	return implem_luaU_to<U>(_L, _index);
-}
-template<typename U> void luaU_push(lua_State* _L, const U& _value) {
-	implem_luaU_push<U>(_L, _value);
-}
-*/
-
 /**
  * This is slightly different than the previous three functions in that you
  * shouldn't need to write your own version of it, since it uses luaU_check
@@ -68,30 +56,6 @@ template<typename U> U luaU_opt(lua_State* _L, int _index, const U& _fallback = 
 		return luaU_check<U>(_L, _index);
 	}
 }
-/*
-template<typename T> T implem_luaU_check<T, typename LUAW_STD::enable_if<LUAW_STD::is_enum<T>::value>::type>(lua_State* _L, int _index) {
-	return static_cast<T>(luaL_checkinteger(_L, _index));
-}
-template<typename T> T implem_luaU_to<T, typename LUAW_STD::enable_if<LUAW_STD::is_enum<T>::value>::type>(lua_State* _L, int _index) {
-	return static_cast<T>(lua_tointeger(_L, _index));
-}
-template<typename T> void implem_luaU_push<T, typename LUAW_STD::enable_if<LUAW_STD::is_enum<T>::value>::type>(lua_State* _L, const T& _value) {
-	lua_pushnumber(_L, static_cast<int>(_value));
-}
-
-template<typename T> T* implem_luaU_check<T*, typename LUAW_STD::enable_if<LUAW_STD::is_class<T>::value>::type>(lua_State* _L, int _index) {
-	return luaW_check<T>(_L, _index);
-}
-template<typename T> T* implem_luaU_to<T*, typename LUAW_STD::enable_if<LUAW_STD::is_class<T>::value>::type>(lua_State* _L, int _index) {
-	return luaW_to<T>(_L, _index);
-}
-template<typename T> void implem_luaU_push<T*, typename LUAW_STD::enable_if<LUAW_STD::is_class<T>::value>::type>(lua_State* _L, T*& _value) {
-	luaW_push <T>(_L, _value);
-}
-template<typename T> void implem_luaU_push<T*, typename LUAW_STD::enable_if<LUAW_STD::is_class<T>::value>::type>(lua_State* _L, T* _value) {
-	luaW_push <T>(_L, _value);
-}
-*/
 
 /**
  * These are just some functions I've always felt should exist
@@ -176,66 +140,66 @@ template <typename U> inline void luaU_setfield(lua_State* _L, int _index, const
  */
 
 template <typename T, typename U, U T::*Member> int luaU_get(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	luaU_push<U>(_L, obj->*Member);
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	luaU_push<U>(_L, obj.get()->*Member);
 	return 1;
 }
 
 template <typename T, typename U, U* T::*Member> int luaU_get(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	luaW_push<U>(_L, obj->*Member);
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	luaW_push<U>(_L, obj.get()->*Member);
 	return 1;
 }
 
 template <typename T, typename U, U (T::*Getter)() const> int luaU_get(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	luaU_push<U>(_L, (obj->*Getter)());
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	luaU_push<U>(_L, (obj.get()->*Getter)());
 	return 1;
 }
 
 template <typename T, typename U, const U& (T::*Getter)() const> int luaU_get(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	luaU_push<U>(_L, (obj->*Getter)());
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	luaU_push<U>(_L, (obj.get()->*Getter)());
 	return 1;
 }
 
 template <typename T, typename U, U* (T::*Getter)() const> int luaU_get(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	luaW_push<U>(_L, (obj->*Getter)());
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	luaW_push<U>(_L, (obj.get()->*Getter)());
 	return 1;
 }
 
 template <typename T, typename U, U T::*Member> int luaU_set(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj) {
-		obj->*Member = luaU_check<U>(_L, 2);
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (obj != null) {
+		obj.get()->*Member = luaU_check<U>(_L, 2);
 	}
 	return 0;
 }
 
 template <typename T, typename U, U* T::*Member> int luaU_set(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj) {
-		U* member = luaW_opt<U>(_L, 2);
-		obj->*Member = member;
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (obj != null) {
+		ememory::SharedPtr<U> member = luaW_opt<U>(_L, 2);
+		obj.get()->*Member = member.get();
 	}
 	return 0;
 }
 
 template <typename T, typename U, const U* T::*Member> int luaU_set(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj) {
-		U* member = luaW_opt<U>(_L, 2);
-		obj->*Member = member;
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (obj != null) {
+		ememory::SharedPtr<U> member = luaW_opt<U>(_L, 2);
+		obj.get()->*Member = member.get();
 	}
 	return 0;
 }
 
 template <typename T, typename U, const U* T::*Member> int luaU_setandrelease(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj) {
-		U* member = luaW_opt<U>(_L, 2);
-		obj->*Member = member;
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (obj != null) {
+		ememory::SharedPtr<U> member = luaW_opt<U>(_L, 2);
+		obj.get()->*Member = member.get();
 		if (member) {
 			luaW_release<U>(_L, member);
 		}
@@ -244,35 +208,35 @@ template <typename T, typename U, const U* T::*Member> int luaU_setandrelease(lu
 }
 
 template <typename T, typename U, void (T::*Setter)(U)> int luaU_set(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj) {
-		(obj->*Setter)(luaU_check<U>(_L, 2));
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (obj != null) {
+		(obj.get()->*Setter)(luaU_check<U>(_L, 2));
 	}
 	return 0;
 }
 
 template <typename T, typename U, void (T::*Setter)(const U&)> int luaU_set(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj) {
-		(obj->*Setter)(luaU_check<U>(_L, 2));
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (obj != null) {
+		(obj.get()->*Setter)(luaU_check<U>(_L, 2));
 	}
 	return 0;
 }
 
 template <typename T, typename U, void (T::*Setter)(U*)> int luaU_set(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj) {
-		U* member = luaW_opt<U>(_L, 2);
-		(obj->*Setter)(member);
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (obj != null) {
+		ememory::SharedPtr<U> member = luaW_opt<U>(_L, 2);
+		(obj.get()->*Setter)(member.get());
 	}
 	return 0;
 }
 
 template <typename T, typename U, void (T::*Setter)(U*)> int luaU_setandrelease(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj) {
-		U* member = luaW_opt<U>(_L, 2);
-		(obj->*Setter)(member);
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (obj != null) {
+		ememory::SharedPtr<U> member = luaW_opt<U>(_L, 2);
+		(obj.get()->*Setter)(member);
 		if (member) {
 			luaW_release<U>(_L, member);
 		}
@@ -281,97 +245,105 @@ template <typename T, typename U, void (T::*Setter)(U*)> int luaU_setandrelease(
 }
 
 template <typename T, typename U, U T::*Member> int luaU_getset(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj && lua_gettop(_L) >= 2) {
-		obj->*Member = luaU_check<U>(_L, 2);
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (    obj != null
+	     && lua_gettop(_L) >= 2) {
+		obj.get()->*Member = luaU_check<U>(_L, 2);
 		return 0;
 	} else {
-		luaU_push<U>(_L, obj->*Member);
+		luaU_push<U>(_L, obj.get()->*Member);
 		return 1;
 	}
 }
 
 template <typename T, typename U, U* T::*Member> int luaU_getset(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj && lua_gettop(_L) >= 2) {
-		U* member = luaW_opt<U>(_L, 2);
-		obj->*Member = member;
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (    obj != null
+	     && lua_gettop(_L) >= 2) {
+		ememory::SharedPtr<U> member = luaW_opt<U>(_L, 2);
+		obj.get()->*Member = member.get();
 		return 0;
 	} else {
-		luaW_push<U>(_L, obj->*Member);
+		luaW_push<U>(_L, obj.get()->*Member);
 		return 1;
 	}
 }
 
 template <typename T, typename U, U* T::*Member> int luaU_getsetandrelease(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj && lua_gettop(_L) >= 2) {
-		U* member = luaW_opt<U>(_L, 2);
-		obj->*Member = member;
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (    obj != null
+	     && lua_gettop(_L) >= 2) {
+		ememory::SharedPtr<U> member = luaW_opt<U>(_L, 2);
+		obj.get()->*Member = member.get();
 		if (member)
 			luaW_release<U>(_L, member);
 		return 0;
 	} else {
-		luaW_push<U>(_L, obj->*Member);
+		luaW_push<U>(_L, obj.get()->*Member);
 		return 1;
 	}
 }
 
 template <typename T, typename U, U (T::*Getter)() const, void (T::*Setter)(U)> int luaU_getset(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj && lua_gettop(_L) >= 2) {
-		(obj->*Setter)(luaU_check<U>(_L, 2));
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (    obj != null
+	     && lua_gettop(_L) >= 2) {
+		(obj.get()->*Setter)(luaU_check<U>(_L, 2));
 		return 0;
 	} else {
-		luaU_push<U>(_L, (obj->*Getter)());
+		luaU_push<U>(_L, (obj.get()->*Getter)());
 		return 1;
 	}
 }
 
 template <typename T, typename U, U (T::*Getter)() const, void (T::*Setter)(const U&)> int luaU_getset(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj && lua_gettop(_L) >= 2) {
-		(obj->*Setter)(luaU_check<U>(_L, 2));
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (    obj != null
+	     && lua_gettop(_L) >= 2) {
+		(obj.get()->*Setter)(luaU_check<U>(_L, 2));
 		return 0;
 	} else {
-		luaU_push<U>(_L, (obj->*Getter)());
+		luaU_push<U>(_L, (obj.get()->*Getter)());
 		return 1;
 	}
 }
 
 template <typename T, typename U, const U& (T::*Getter)() const, void (T::*Setter)(const U&)> int luaU_getset(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj && lua_gettop(_L) >= 2) {
-		(obj->*Setter)(luaU_check<U>(_L, 2));
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (    obj != null
+	     && lua_gettop(_L) >= 2) {
+		(obj.get()->*Setter)(luaU_check<U>(_L, 2));
 		return 0;
 	} else {
-		luaU_push<U>(_L, (obj->*Getter)());
+		luaU_push<U>(_L, (obj.get()->*Getter)());
 		return 1;
 	}
 }
 
 template <typename T, typename U, U* (T::*Getter)() const, void (T::*Setter)(U*)> int luaU_getset(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj && lua_gettop(_L) >= 2) {
-		U* member = luaW_opt<U>(_L, 2);
-		(obj->*Setter)(member);
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (    obj != null
+	     && lua_gettop(_L) >= 2) {
+		ememory::SharedPtr<U> member = luaW_opt<U>(_L, 2);
+		(obj.get()->*Setter)(member.get());
 		return 0;
 	} else {
-		luaW_push<U>(_L, (obj->*Getter)());
+		luaW_push<U>(_L, (obj.get()->*Getter)());
 		return 1;
 	}
 }
 
 template <typename T, typename U, U* (T::*Getter)() const, void (T::*Setter)(U*)> int luaU_getsetandrelease(lua_State* _L) {
-	T* obj = luaW_check<T>(_L, 1);
-	if (obj && lua_gettop(_L) >= 2) {
-		U* member = luaW_opt<U>(_L, 2);
-		(obj->*Setter)(member);
+	ememory::SharedPtr<T> obj = luaW_check<T>(_L, 1);
+	if (    obj != null
+	     && lua_gettop(_L) >= 2) {
+		ememory::SharedPtr<U> member = luaW_opt<U>(_L, 2);
+		(obj.get()->*Setter)(member);
 		if (member)
 			luaW_release<U>(_L, member);
 		return 0;
 	} else {
-		luaW_push<U>(_L, (obj->*Getter)());
+		luaW_push<U>(_L, (obj.get()->*Getter)());
 		return 1;
 	}
 }
