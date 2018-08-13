@@ -1,5 +1,5 @@
 #pragma once
 
 struct lua_State;
-int luaopen_Example(lua_State* _L);
+int luaopen_Example(luaWrapper:Lua& _lua);
 

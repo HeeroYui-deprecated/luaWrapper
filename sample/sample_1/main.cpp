@@ -26,12 +26,12 @@ int main(int _argc, const char *_argv[]) {
 		}
 	}
 	if (inputFileName.empty() == true) {
-		TEST_ERROR("missing file...");
-		usage();
+		TEST_WARNING("missing file... ==> select default one");
+		inputFileName = "DATA:example1.lua";
 	}
 	{
 		luaWrapper::Lua lua;
-		luaopen_BankAccount(lua.getState());
+		luaopen_BankAccount(lua);
 		lua.executeFile(inputFileName);
 	}
 	TEST_PRINT("END SAMPLE 1");

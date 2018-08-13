@@ -2,96 +2,97 @@
 #include <etk/String.hpp>
 #include <etk/typeInfo.hpp>
 #include <iostream>
+#include <test-debug/debug.hpp>
 
 ETK_DECLARE_TYPE(Example);
 
 // These are just a bunch of generic getters and setters for
 // values in the Example class
 
-bool Example::GetBoolean() const {
+bool Example::getBoolean() const {
 	return m_boolean;
 }
 
-int Example::GetInteger() const {
+int Example::getInteger() const {
 	return m_integer;
 }
 
-unsigned int Example::GetUInteger() const {
+unsigned int Example::getUInteger() const {
 	return m_uinteger;
 }
 
-const char* Example::GetCString() const {
+const char* Example::getCString() const {
 	return m_cstring;
 }
 
-const etk::String& Example::GetCPPString() const {
+const etk::String& Example::getCPPString() const {
 	return m_cppstring;
 }
 
-const Vector2D& Example::GetVec() const {
+const Vector2D& Example::getVec() const {
 	return m_vec;
 }
 
-double Example::GetNumber() const {
+double Example::getNumber() const {
 	return m_number;
 }
 
-float Example::GetFloatNumber() const {
+float Example::getFloatNumber() const {
 	return m_floatnumber;
 }
 
-Example* Example::GetPtr() const {
+Example* Example::getPtr() const {
 	return m_ptr;
 }
 
-void Example::SetBoolean(bool _val) {
+void Example::setBoolean(bool _val) {
 	m_boolean = _val;
 }
 
-void Example::SetInteger(int _val) {
+void Example::setInteger(int _val) {
 	m_integer = _val;
 }
 
-void Example::SetUInteger(unsigned int _val) {
+void Example::setUInteger(unsigned int _val) {
 	m_uinteger = _val;
 }
 
-void Example::SetCString(const char* _val) {
+void Example::setCString(const char* _val) {
 	m_cstring = _val;
 }
 
-void Example::SetCPPString(const etk::String& _val) {
+void Example::setCPPString(const etk::String& _val) {
 	m_cppstring = _val;
 }
 
-void Example::SetVec(const Vector2D& _val) {
+void Example::setVec(const Vector2D& _val) {
 	m_vec = _val;
 }
 
-void Example::SetNumber(double _val) {
+void Example::setNumber(double _val) {
 	m_number = _val;
 }
 
-void Example::SetFloatNumber(float _val) {
+void Example::setFloatNumber(float _val) {
 	m_floatnumber = _val;
 }
 
-void Example::SetPtr(Example* _val) {
+void Example::setPtr(Example* _val) {
 	m_ptr = _val;
 }
 
 int Example::DoSomething(bool _b) {
-	std::cout << "b = " << _b << std::endl;
+	TEST_PRINT("b = " << _b);
 	return 0;
 }
 
 int Example::DoSomethingElse(int _i, int _j) {
-	std::cout << "i = " << _i << ", j = " << _j << std::endl;
+	TEST_PRINT("i = " << _i << ", j = " << _j);
 	return 0;
 }
 
 int Example::DoSomethingElse(float _f) {
-	std::cout << "f = " << _f << std::endl;
+	TEST_PRINT("f = " << _f);
 	return 0;
 }
 

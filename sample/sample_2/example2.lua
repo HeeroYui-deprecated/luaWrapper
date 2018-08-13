@@ -29,3 +29,5 @@ for k, v in pairs(vec2) do
 end
 
 ex:printMe()
+
+ex:doSomething(true, 12432)

@@ -107,7 +107,7 @@ namespace luaWrapper {
 		 *	 object through a getter or setter
 		 *
 		 * The interface to all of them is the same however. In addition to plain
-		 * getter and setter functions, there is a getset which does both - if an
+		 * getter and setter functions, there is a getSet which does both - if an
 		 * argument is supplied it attempts to set the value, and in either case it
 		 * returns the value. In your lua table declaration in C++ rather than write
 		 * individiual wrappers for each getter and setter you may do the following:
@@ -116,7 +116,7 @@ namespace luaWrapper {
 		 * {
 		 *	 { "GetBar", luaWrapper::utils::get<Foo, bool, &Widget::GetBar> },
 		 *	 { "SetBar", luaWrapper::utils::set<Foo, bool, &Widget::SetBar> },
-		 *	 { "Bar", luaWrapper::utils::getset<Foo, bool, &Widget::GetBar, &Widget::SetBar> },
+		 *	 { "Bar", luaWrapper::utils::getSet<Foo, bool, &Widget::GetBar, &Widget::SetBar> },
 		 *	 { NULL, NULL }
 		 * }
 		 *
@@ -135,7 +135,7 @@ namespace luaWrapper {
 		 * {
 		 *	 { "GetBar", luaWrapper::utils::get<Foo, bool, &Widget::bar> },
 		 *	 { "SetBar", luaWrapper::utils::set<Foo, bool, &Widget::bar> },
-		 *	 { "Bar", luaWrapper::utils::getset<Foo, bool, &Widget::bar> },
+		 *	 { "Bar", luaWrapper::utils::getSet<Foo, bool, &Widget::bar> },
 		 * }
 		 *
 		 * In a Lua script, you can now use foo:GetBar(), foo:SetBar() and foo:Bar()
@@ -197,7 +197,7 @@ namespace luaWrapper {
 			return 0;
 		}
 		
-		template <typename T, typename U, const U* T::*Member> int setandrelease(lua_State* _L) {
+		template <typename T, typename U, const U* T::*Member> int setAndRelease(lua_State* _L) {
 			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
 			if (obj != null) {
 				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_L, 2);
@@ -234,7 +234,7 @@ namespace luaWrapper {
 			return 0;
 		}
 		
-		template <typename T, typename U, void (T::*Setter)(U*)> int setandrelease(lua_State* _L) {
+		template <typename T, typename U, void (T::*Setter)(U*)> int setAndRelease(lua_State* _L) {
 			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
 			if (obj != null) {
 				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_L, 2);
@@ -246,7 +246,7 @@ namespace luaWrapper {
 			return 0;
 		}
 		
-		template <typename T, typename U, U T::*Member> int getset(lua_State* _L) {
+		template <typename T, typename U, U T::*Member> int getSet(lua_State* _L) {
 			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
 			if (    obj != null
 			     && lua_gettop(_L) >= 2) {
@@ -258,7 +258,7 @@ namespace luaWrapper {
 			}
 		}
 		
-		template <typename T, typename U, U* T::*Member> int getset(lua_State* _L) {
+		template <typename T, typename U, U* T::*Member> int getSet(lua_State* _L) {
 			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
 			if (    obj != null
 			     && lua_gettop(_L) >= 2) {
@@ -271,7 +271,7 @@ namespace luaWrapper {
 			}
 		}
 		
-		template <typename T, typename U, U* T::*Member> int getsetandrelease(lua_State* _L) {
+		template <typename T, typename U, U* T::*Member> int getSetAndRelease(lua_State* _L) {
 			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
 			if (    obj != null
 			     && lua_gettop(_L) >= 2) {
@@ -286,7 +286,7 @@ namespace luaWrapper {
 			}
 		}
 		
-		template <typename T, typename U, U (T::*Getter)() const, void (T::*Setter)(U)> int getset(lua_State* _L) {
+		template <typename T, typename U, U (T::*Getter)() const, void (T::*Setter)(U)> int getSet(lua_State* _L) {
 			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
 			if (    obj != null
 			     && lua_gettop(_L) >= 2) {
@@ -298,7 +298,7 @@ namespace luaWrapper {
 			}
 		}
 		
-		template <typename T, typename U, U (T::*Getter)() const, void (T::*Setter)(const U&)> int getset(lua_State* _L) {
+		template <typename T, typename U, U (T::*Getter)() const, void (T::*Setter)(const U&)> int getSet(lua_State* _L) {
 			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
 			if (    obj != null
 			     && lua_gettop(_L) >= 2) {
@@ -310,7 +310,7 @@ namespace luaWrapper {
 			}
 		}
 		
-		template <typename T, typename U, const U& (T::*Getter)() const, void (T::*Setter)(const U&)> int getset(lua_State* _L) {
+		template <typename T, typename U, const U& (T::*Getter)() const, void (T::*Setter)(const U&)> int getSet(lua_State* _L) {
 			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
 			if (    obj != null
 			     && lua_gettop(_L) >= 2) {
@@ -322,7 +322,7 @@ namespace luaWrapper {
 			}
 		}
 		
-		template <typename T, typename U, U* (T::*Getter)() const, void (T::*Setter)(U*)> int getset(lua_State* _L) {
+		template <typename T, typename U, U* (T::*Getter)() const, void (T::*Setter)(U*)> int getSet(lua_State* _L) {
 			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
 			if (    obj != null
 			     && lua_gettop(_L) >= 2) {
@@ -335,7 +335,7 @@ namespace luaWrapper {
 			}
 		}
 		
-		template <typename T, typename U, U* (T::*Getter)() const, void (T::*Setter)(U*)> int getsetandrelease(lua_State* _L) {
+		template <typename T, typename U, U* (T::*Getter)() const, void (T::*Setter)(U*)> int getSetAndRelease(lua_State* _L) {
 			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
 			if (    obj != null
 			     && lua_gettop(_L) >= 2) {
@@ -359,12 +359,12 @@ namespace luaWrapper {
 		 *
 		 * struct Foo
 		 * {
-		 *	 int DoSomething(int, const char*);
+		 *	 int doSomething(int, const char*);
 		 * };
 		 *
 		 * static luaL_reg Foo_metatable[] =
 		 * {
-		 *	 { "DoSomething", luaWrapper::utils::func(&Foo::DoSomething) },
+		 *	 { "doSomething", luaWrapper::utils::func(&Foo::doSomething) },
 		 *	 { NULL, NULL }
 		 * }
 		 *
@@ -376,7 +376,7 @@ namespace luaWrapper {
 		 * This macro will expand based on the function signature of Foo::DoSomething
 		 * In this example, it would expand into the following wrapper:
 		 *
-		 *	 luaWrapper::utils::push(luaWrapper::check<T>(L, 1)->DoSomething(luaWrapper::utils::check<int>(L, 2), luaWrapper::utils::check<const char*>(L, 3)));
+		 *	 luaWrapper::utils::push(luaWrapper::check<T>(L, 1)->doSomething(luaWrapper::utils::check<int>(L, 2), luaWrapper::utils::check<const char*>(L, 3)));
 		 *	 return 1;
 		 *
 		 * In this example there is only one member function called DoSomething. In some
@@ -457,27 +457,31 @@ namespace luaWrapper {
 		/**
 		 * Member function wrapper
 		 */
-		template<class MemFunPtrType, MemFunPtrType MemberFunc> struct MemberFuncWrapper;
+		template<class LUAW_MEMORY_FUNCTION_POINTER_TYPE, LUAW_MEMORY_FUNCTION_POINTER_TYPE MemberFunc>
+		struct MemberFuncWrapper;
 		
-		template<class T, class ReturnType, class... Args, ReturnType(T::*MemberFunc)(Args...)> struct MemberFuncWrapper<ReturnType (T::*)(Args...), MemberFunc> {
+		template<class LUAW_TYPE, class ReturnType, class... Args, ReturnType(LUAW_TYPE::*MemberFunc)(Args...)>
+		struct MemberFuncWrapper<ReturnType (T::*)(Args...), MemberFunc> {
 			public:
 				static int call(lua_State* _L) {
 					return callImpl(_L, makeIntRange<2,sizeof...(Args)>());
 				}
 			private:
 				template<int... indices> static int callImpl(lua_State* _L, IntPack<indices...>) {
-					luaWrapper::utils::push<ReturnType>(_L, ((*luaWrapper::check<T>(_L, 1)).*MemberFunc)(luaWrapper::utils::check<typename luaWrapper::utils::remove_cr<Args>::type>(_L, indices)...));
+					luaWrapper::utils::push<ReturnType>(_L, ((*luaWrapper::check<LUAW_TYPE>(_L, 1)).*MemberFunc)(luaWrapper::utils::check<typename luaWrapper::utils::remove_cr<Args>::type>(_L, indices)...));
 					return 1;
 				}
 		};
 		
-		template<class T, class... Args, void(T::*MemberFunc)(Args...)> struct MemberFuncWrapper<void(T::*)(Args...), MemberFunc> {
+		template<class LUAW_TYPE, class... Args, void(LUAW_TYPE::*MemberFunc)(Args...)>
+		struct MemberFuncWrapper<void(T::*)(Args...), MemberFunc> {
 			public:
 				static int call(lua_State* _L) {
 					return callImpl(_L, luaWrapper::utils::makeIntRange<2, sizeof...(Args)>());
 				}
 			private:
-				template<int... indices> static int callImpl(lua_State* _L, IntPack<indices...>) {
+				template<int... indices>
+				static int callImpl(lua_State* _L, IntPack<indices...>) {
 					((*luaWrapper::check<T>(_L, 1)).*MemberFunc)(luaWrapper::utils::check<typename luaWrapper::utils::remove_cr<Args>::type>(_L, indices)...);
 					return 0;
 				}
@@ -488,21 +492,24 @@ namespace luaWrapper {
 		 * static function wrapper
 		 */
 		
-		template<class FunPtrType, FunPtrType Func> struct StaticFuncWrapper;
+		template<class LUAW_FUNCTION_POINTER_TYPE, LUAW_FUNCTION_POINTER_TYPE LUAW_FUNCTION>
+		struct StaticFuncWrapper;
 		
-		template<class ReturnType, class... Args, ReturnType(*Func)(Args...)> struct StaticFuncWrapper<ReturnType(*)(Args...), Func> {
+		template<class ReturnType, class... Args, ReturnType(*LUAW_FUNCTION)(Args...)>
+		struct StaticFuncWrapper<ReturnType(*)(Args...), LUAW_FUNCTION> {
 			public:
 				static int call(lua_State* _L) {
 					return callImpl(_L, luaWrapper::utils::makeIntRange<2,sizeof...(Args)>());
 				}
 			private:
 				template<int... indices> static int callImpl(lua_State* _L, IntPack<indices...>) {
-					luaWrapper::utils::push<ReturnType>(_L, (*Func)(luaWrapper::utils::check<typename luaWrapper::utils::remove_cr<Args>::type>(_L, indices)...));
+					luaWrapper::utils::push<ReturnType>(_L, (*LUAW_FUNCTION)(luaWrapper::utils::check<typename luaWrapper::utils::remove_cr<Args>::type>(_L, indices)...));
 					return 1;
 				}
 		};
 		
-		template<class... Args, void(*Func)(Args...)> struct StaticFuncWrapper<void(*)(Args...), Func> {
+		template<class... Args, void(*LUAW_FUNCTION)(Args...)>
+		struct StaticFuncWrapper<void(*)(Args...), LUAW_FUNCTION> {
 			public:
 				static int call(lua_State* _L) {
 					return callImpl(_L, luaWrapper::utils::makeIntRange<2, sizeof...(Args)>());
@@ -510,7 +517,7 @@ namespace luaWrapper {
 			private:
 				template<int... indices>
 				static int callImpl(lua_State* _L, luaWrapper::utils::IntPack<indices...>) {
-					(*Func)(luaWrapper::utils::check<typename luaWrapper::utils::remove_cr<Args>::type>(_L, indices)...);
+					(*LUAW_FUNCTION)(luaWrapper::utils::check<typename luaWrapper::utils::remove_cr<Args>::type>(_L, indices)...);
 					return 0;
 				}
 		};
@@ -532,13 +539,13 @@ namespace luaWrapper {
 		 * foo = Foo.new()
 		 * foo2 = foo:clone()
 		 */
-		template <typename T> int clone(lua_State* _L) {
-			T* obj = new T(*luaWrapper::check<T>(_L, 1));
+		template <typename LUAW_TYPE> int clone(lua_State* _L) {
+			T* obj = new T(*luaWrapper::check<LUAW_TYPE>(_L, 1));
 			lua_remove(_L, 1); // ...
 			int numargs = lua_gettop(_L);
 			luaWrapper::push<T>(_L, obj); // ... clone
 			luaWrapper::hold<T>(_L, obj);
-			luaWrapper::postconstructor<T>(_L, numargs);
+			luaWrapper::postconstructor<LUAW_TYPE>(_L, numargs);
 			return 1;
 		}
 		
@@ -560,7 +567,7 @@ namespace luaWrapper {
 		 * After the object is constructed, luaWrapper::utils::build will do the equivalent of
 		 * calling f:X(10) and f:Y(20).
 		 */
-		template <typename T> int build(lua_State* _L) {
+		template <typename LUAW_TYPE> int build(lua_State* _L) {
 			// obj {}
 			lua_insert(_L, -2); // {} obj
 			if (lua_type(_L, 1) == LUA_TTABLE) {

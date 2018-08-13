@@ -41,6 +41,7 @@
 #include <ememory/memory.hpp>
 #include <etk/typeInfo.hpp>
 #include <etk/Allocator.hpp>
+#include <etk/os/FSNode.hpp>
 
 #include <luaWrapper/debug.hpp>
 
@@ -73,7 +74,13 @@ namespace luaWrapper {
 				}
 			}
 			void executeFile(const etk::String& _fileName) {
-				if (luaL_dofile(m_luaState, _fileName.c_str())) {
+				etk::String data = etk::FSNodeReadAllData(_fileName);
+				if (luaL_dostring(m_luaState, &data[0])) {
+					LUAW_PRINT(lua_tostring(m_luaState, -1));
+				}
+			}
+			void executeString(const etk::String& _rawData) {
+				if (luaL_dostring(m_luaState, &_rawData[0])) {
 					LUAW_PRINT(lua_tostring(m_luaState, -1));
 				}
 			}
@@ -122,7 +129,7 @@ namespace luaWrapper {
 	 * when and object is the type I want. This is only used internally.
 	 */
 	struct Userdata {
-		Userdata(ememory::SharedPtr<void> _vptr = null, size_t _typeId = 0) :
+		Userdata(ememory::SharedPtr<void> _vptr = null, size_t _typeId = 0):
 		  m_data(etk::move(_vptr)),
 		  m_typeId(_typeId) {
 			// nothing to do ...
@@ -174,7 +181,7 @@ namespace luaWrapper {
 	}
 	
 	template <typename LUAW_TYPE>
-	inline void wrapperfield(lua_State* _luaState, const char* _field) {
+	inline void wrapperField(lua_State* _luaState, const char* _field) {
 		lua_getfield(_luaState, LUA_REGISTRYINDEX, LUAW_WRAPPER_KEY); // ... LuaWrapper
 		lua_getfield(_luaState, -1, _field); // ... LuaWrapper LuaWrapper.field
 		lua_getfield(_luaState, -1, LuaWrapper<LUAW_TYPE>::classname); // ... LuaWrapper LuaWrapper.field LuaWrapper.field.class
@@ -274,7 +281,7 @@ namespace luaWrapper {
 	               ememory::SharedPtr<LUAW_TYPE> _obj) {
 		if (_obj != null) {
 			LuaWrapper<LUAW_TYPE>::identifier(_luaState, _obj); // ... id
-			wrapperfield<LUAW_TYPE>(_luaState, LUAW_CACHE_KEY); // ... id cache
+			wrapperField<LUAW_TYPE>(_luaState, LUAW_CACHE_KEY); // ... id cache
 			lua_pushvalue(_luaState, -2); // ... id cache id
 			lua_gettable(_luaState, -2); // ... id cache obj
 			if (lua_isnil(_luaState, -1)) {
@@ -309,7 +316,7 @@ namespace luaWrapper {
 	template <typename LUAW_TYPE>
 	bool hold(lua_State* _luaState,
 	               ememory::SharedPtr<LUAW_TYPE> _obj) {
-		wrapperfield<LUAW_TYPE>(_luaState, LUAW_HOLDS_KEY); // ... holds
+		wrapperField<LUAW_TYPE>(_luaState, LUAW_HOLDS_KEY); // ... holds
 		LuaWrapper<LUAW_TYPE>::identifier(_luaState, _obj); // ... holds id
 		lua_pushvalue(_luaState, -1); // ... holds id id
 		lua_gettable(_luaState, -3); // ... holds id hold
@@ -339,7 +346,7 @@ namespace luaWrapper {
 	template <typename LUAW_TYPE>
 	void release(lua_State* _luaState,
 	                  int _index) {
-		wrapperfield<LUAW_TYPE>(_luaState, LUAW_HOLDS_KEY); // ... id ... holds
+		wrapperField<LUAW_TYPE>(_luaState, LUAW_HOLDS_KEY); // ... id ... holds
 		lua_pushvalue(_luaState, correctindex(_luaState, _index, 1)); // ... id ... holds id
 		lua_pushnil(_luaState); // ... id ... holds id nil
 		lua_settable(_luaState, -3); // ... id ... holds
@@ -427,7 +434,7 @@ namespace luaWrapper {
 	int index(lua_State* _luaState) {
 		// obj key
 		ememory::SharedPtr<LUAW_TYPE> obj = to<LUAW_TYPE>(_luaState, 1);
-		wrapperfield<LUAW_TYPE>(_luaState, LUAW_STORAGE_KEY); // obj key storage
+		wrapperField<LUAW_TYPE>(_luaState, LUAW_STORAGE_KEY); // obj key storage
 		LuaWrapper<LUAW_TYPE>::identifier(_luaState, obj); // obj key storage id
 		lua_gettable(_luaState, -2); // obj key storage store
 		// Check if storage table exists
@@ -459,7 +466,7 @@ namespace luaWrapper {
 	int newindex(lua_State* _luaState) {
 		// obj key value
 		ememory::SharedPtr<LUAW_TYPE> obj = check<LUAW_TYPE>(_luaState, 1);
-		wrapperfield<LUAW_TYPE>(_luaState, LUAW_STORAGE_KEY); // obj key value storage
+		wrapperField<LUAW_TYPE>(_luaState, LUAW_STORAGE_KEY); // obj key value storage
 		LuaWrapper<LUAW_TYPE>::identifier(_luaState, obj); // obj key value storage id
 		lua_pushvalue(_luaState, -1); // obj key value storage id id
 		lua_gettable(_luaState, -3); // obj key value storage id store
@@ -490,13 +497,13 @@ namespace luaWrapper {
 		/*
 		ememory::SharedPtr<LUAW_TYPE> obj = to<LUAW_TYPE>(_luaState, 1);
 		LuaWrapper<LUAW_TYPE>::identifier(_luaState, obj); // obj key value storage id
-		wrapperfield<LUAW_TYPE>(_luaState, LUAW_HOLDS_KEY); // obj id counts count holds
+		wrapperField<LUAW_TYPE>(_luaState, LUAW_HOLDS_KEY); // obj id counts count holds
 		lua_pushvalue(_luaState, 2); // obj id counts count holds id
 		lua_gettable(_luaState, -2); // obj id counts count holds hold
 		if (lua_toboolean(_luaState, -1)) {
 			obj.reset();
 		}
-		wrapperfield<LUAW_TYPE>(_luaState, LUAW_STORAGE_KEY); // obj id counts count holds hold storage
+		wrapperField<LUAW_TYPE>(_luaState, LUAW_STORAGE_KEY); // obj id counts count holds hold storage
 		lua_pushvalue(_luaState, 2); // obj id counts count holds hold storage id
 		lua_pushnil(_luaState); // obj id counts count holds hold storage id nil
 		lua_settable(_luaState, -3); // obj id counts count holds hold storage
@@ -630,7 +637,7 @@ namespace luaWrapper {
 		lua_pop(_luaState, 1); // ... LuaWrapper
 		lua_getfield(_luaState, -1, LUAW_CACHE_KEY); // ... LuaWrapper LuaWrapper.cache
 		lua_newtable(_luaState); // ... LuaWrapper LuaWrapper.cache {}
-		wrapperfield<LUAW_TYPE>(_luaState, LUAW_CACHE_METATABLE_KEY); // ... LuaWrapper LuaWrapper.cache {} cmt
+		wrapperField<LUAW_TYPE>(_luaState, LUAW_CACHE_METATABLE_KEY); // ... LuaWrapper LuaWrapper.cache {} cmt
 		lua_setmetatable(_luaState, -2); // ... LuaWrapper LuaWrapper.cache {}
 		lua_setfield(_luaState, -2, LuaWrapper<LUAW_TYPE>::classname); // ... LuaWrapper LuaWrapper.cache
 		lua_pop(_luaState, 2); // ...
@@ -646,27 +653,27 @@ namespace luaWrapper {
 	}
 	template <typename LUAW_TYPE>
 	void setfuncs(lua_State* _luaState,
-	                   const char* _classname,
-	                   const luaL_Reg* _table,
-	                   const luaL_Reg* _metatable,
-	                   ememory::SharedPtr<LUAW_TYPE> (*_allocator)(lua_State*)) {
+	              const char* _classname,
+	              const luaL_Reg* _table,
+	              const luaL_Reg* _metatable,
+	              ememory::SharedPtr<LUAW_TYPE> (*_allocator)(lua_State*)) {
 		setfuncs(_luaState, _classname, _table, _metatable, _allocator, defaultidentifier<LUAW_TYPE>);
 	}
 	template <typename LUAW_TYPE>
 	void setfuncs(lua_State* _luaState,
-	                   const char* _classname,
-	                   const luaL_Reg* _table,
-	                   const luaL_Reg* _metatable) {
+	              const char* _classname,
+	              const luaL_Reg* _table,
+	              const luaL_Reg* _metatable) {
 		setfuncs(_luaState, _classname, _table, _metatable, defaultallocator<LUAW_TYPE>, defaultidentifier<LUAW_TYPE>);
 	}
 	
 	template <typename LUAW_TYPE>
 	void registerElement(lua_State* _luaState,
-	                   const char* _classname,
-	                   const luaL_Reg* _table,
-	                   const luaL_Reg* _metatable,
-	                   ememory::SharedPtr<LUAW_TYPE> (*_allocator)(lua_State*),
-	                   void (*_identifier)(lua_State*, ememory::SharedPtr<LUAW_TYPE>)) {
+	                     const char* _classname,
+	                     const luaL_Reg* _table,
+	                     const luaL_Reg* _metatable,
+	                     ememory::SharedPtr<LUAW_TYPE> (*_allocator)(lua_State*),
+	                     void (*_identifier)(lua_State*, ememory::SharedPtr<LUAW_TYPE>)) {
 		setfuncs(_luaState, _classname, _table, _metatable, _allocator, _identifier); // ... T
 		lua_pushvalue(_luaState, -1); // ... LUAW_TYPE LUAW_TYPE
 		lua_setglobal(_luaState, _classname); // ... LUAW_TYPE
@@ -674,10 +681,10 @@ namespace luaWrapper {
 	
 	template <typename LUAW_TYPE>
 	void registerElement(lua_State* _luaState,
-	                   const char* _classname,
-	                   const luaL_Reg* _table,
-	                   const luaL_Reg* _metatable,
-	                   ememory::SharedPtr<LUAW_TYPE> (*_allocator)(lua_State*)) {
+	                     const char* _classname,
+	                     const luaL_Reg* _table,
+	                     const luaL_Reg* _metatable,
+	                     ememory::SharedPtr<LUAW_TYPE> (*_allocator)(lua_State*)) {
 		setfuncs(_luaState, _classname, _table, _metatable, _allocator, defaultidentifier<LUAW_TYPE>);
 		lua_pushvalue(_luaState, -1); // ... LUAW_TYPE LUAW_TYPE
 		lua_setglobal(_luaState, _classname); // ... LUAW_TYPE
@@ -685,9 +692,9 @@ namespace luaWrapper {
 	
 	template <typename LUAW_TYPE>
 	void registerElement(lua_State* _luaState,
-	                   const char* _classname,
-	                   const luaL_Reg* _table,
-	                   const luaL_Reg* _metatable) {
+	                     const char* _classname,
+	                     const luaL_Reg* _table,
+	                     const luaL_Reg* _metatable) {
 		setfuncs(_luaState, _classname, _table, _metatable, defaultallocator<LUAW_TYPE>, defaultidentifier<LUAW_TYPE>); // ... T
 		lua_pushvalue(_luaState, -1); // ... T T
 		lua_setglobal(_luaState, _classname); // ... T

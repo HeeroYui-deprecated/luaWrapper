@@ -1,4 +1,4 @@
 #pragma once
 
 struct lua_State;
-int luaopen_BankAccount(lua_State* _luaState);
+int luaopen_BankAccount(luaWrapper:Lua& _lua);

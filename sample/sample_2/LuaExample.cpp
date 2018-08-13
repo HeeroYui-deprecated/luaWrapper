@@ -38,43 +38,43 @@ static luaL_Reg Example_metatable[] = {
 	//                       Class    | data type | class member
 	{ "getBoolean", luaWrapper::utils::get<Example,   bool,       &Example::m_boolean> },
 	{ "setBoolean", luaWrapper::utils::set<Example,   bool,       &Example::m_boolean> },
-	{ "m_boolean", luaWrapper::utils::getset<Example,   bool,       &Example::m_boolean> },
+	{ "m_boolean", luaWrapper::utils::getSet<Example,   bool,       &Example::m_boolean> },
 	
 	{ "getInteger", luaWrapper::utils::get<Example, int, &Example::m_integer> },
 	{ "setInteger", luaWrapper::utils::set<Example, int, &Example::m_integer> },
-	{ "m_integer", luaWrapper::utils::getset<Example, int, &Example::m_integer> },
+	{ "m_integer", luaWrapper::utils::getSet<Example, int, &Example::m_integer> },
 	
 	{ "getUInteger", luaWrapper::utils::get<Example, unsigned int, &Example::m_uinteger> },
 	{ "setUInteger", luaWrapper::utils::set<Example, unsigned int, &Example::m_uinteger> },
-	{ "m_uinteger", luaWrapper::utils::getset<Example, unsigned int, &Example::m_uinteger> },
+	{ "m_uinteger", luaWrapper::utils::getSet<Example, unsigned int, &Example::m_uinteger> },
 	
 	{ "getCString", luaWrapper::utils::get<Example, const char*, &Example::m_cstring> },
 	{ "setCString", luaWrapper::utils::set<Example, const char*, &Example::m_cstring> },
-	{ "m_string", luaWrapper::utils::getset<Example, const char*, &Example::m_cstring> },
+	{ "m_string", luaWrapper::utils::getSet<Example, const char*, &Example::m_cstring> },
 	
 	{ "getCPPString", luaWrapper::utils::get<Example, etk::String, &Example::m_cppstring> },
 	{ "setCPPString", luaWrapper::utils::set<Example, etk::String, &Example::m_cppstring> },
-	{ "m_cppstring", luaWrapper::utils::getset<Example, etk::String, &Example::m_cppstring> },
+	{ "m_cppstring", luaWrapper::utils::getSet<Example, etk::String, &Example::m_cppstring> },
 	
 	{ "getVec", luaWrapper::utils::get<Example, Vector2D, &Example::m_vec> },
 	{ "setVec", luaWrapper::utils::set<Example, Vector2D, &Example::m_vec> },
-	{ "m_vec", luaWrapper::utils::getset<Example, Vector2D, &Example::m_vec> },
+	{ "m_vec", luaWrapper::utils::getSet<Example, Vector2D, &Example::m_vec> },
 	
 	{ "getNumber", luaWrapper::utils::get<Example, double, &Example::m_number> },
 	{ "setNumber", luaWrapper::utils::set<Example, double, &Example::m_number> },
-	{ "m_number", luaWrapper::utils::getset<Example, double, &Example::m_number> },
+	{ "m_number", luaWrapper::utils::getSet<Example, double, &Example::m_number> },
 	
 	{ "getFloatNumber", luaWrapper::utils::get<Example, float, &Example::m_floatnumber> },
 	{ "setFloatNumber", luaWrapper::utils::set<Example, float, &Example::m_floatnumber> },
-	{ "m_floatnumber", luaWrapper::utils::getset<Example, float, &Example::m_floatnumber> },
+	{ "m_floatnumber", luaWrapper::utils::getSet<Example, float, &Example::m_floatnumber> },
 	
 	{ "getPtr", luaWrapper::utils::get<Example, Example, &Example::m_ptr> },
 	{ "setPtr", luaWrapper::utils::set<Example, Example, &Example::m_ptr> },
-	{ "Ptr", luaWrapper::utils::getset<Example, Example, &Example::m_ptr> },
+	{ "Ptr", luaWrapper::utils::getSet<Example, Example, &Example::m_ptr> },
 	
 	// The getters and setters above work on member variables directly, but
 	// sometimes all you have are getter and setter functions instead of
-	// variables. You can still automate the creation of Getter and Setter Lua
+	// variables. You can still automate the creation of getter and setter Lua
 	// function wrappers.
 	
 	// Normally it would be silly to have getter and setter functions for both
@@ -85,55 +85,55 @@ static luaL_Reg Example_metatable[] = {
 	//                           Class    | data type | getter
 	//                           Class    | data type | setter
 	//                           Class    | data type | getter               | setter
-	{ "getBooleanFunc", luaWrapper::utils::get<Example,   bool, &Example::GetBoolean> },
-	{ "setBooleanFunc", luaWrapper::utils::set<Example,   bool, &Example::SetBoolean> },
-	{ "BooleanFunc", luaWrapper::utils::getset<Example,   bool, &Example::GetBoolean, &Example::SetBoolean> },
+	{ "getBooleanFunc", luaWrapper::utils::get<Example,   bool, &Example::getBoolean> },
+	{ "setBooleanFunc", luaWrapper::utils::set<Example,   bool, &Example::setBoolean> },
+	{ "BooleanFunc", luaWrapper::utils::getSet<Example,   bool, &Example::getBoolean, &Example::setBoolean> },
 	
-	{ "getIntegerFunc", luaWrapper::utils::get<Example, int, &Example::GetInteger> },
-	{ "setIntegerFunc", luaWrapper::utils::set<Example, int, &Example::SetInteger> },
-	{ "IntegerFunc", luaWrapper::utils::getset<Example, int, &Example::GetInteger, &Example::SetInteger> },
+	{ "getIntegerFunc", luaWrapper::utils::get<Example, int, &Example::getInteger> },
+	{ "setIntegerFunc", luaWrapper::utils::set<Example, int, &Example::setInteger> },
+	{ "IntegerFunc", luaWrapper::utils::getSet<Example, int, &Example::getInteger, &Example::setInteger> },
 	
-	{ "getUIntegerFunc", luaWrapper::utils::get<Example, unsigned int, &Example::GetUInteger> },
-	{ "setUIntegerFunc", luaWrapper::utils::set<Example, unsigned int, &Example::SetUInteger> },
-	{ "UIntegerFunc", luaWrapper::utils::getset<Example, unsigned int, &Example::GetUInteger, &Example::SetUInteger> },
+	{ "getUIntegerFunc", luaWrapper::utils::get<Example, unsigned int, &Example::getUInteger> },
+	{ "setUIntegerFunc", luaWrapper::utils::set<Example, unsigned int, &Example::setUInteger> },
+	{ "UIntegerFunc", luaWrapper::utils::getSet<Example, unsigned int, &Example::getUInteger, &Example::setUInteger> },
 	
-	{ "getCStringFunc", luaWrapper::utils::get<Example, const char*, &Example::GetCString> },
-	{ "setCStringFunc", luaWrapper::utils::set<Example, const char*, &Example::SetCString> },
-	{ "CStringFunc", luaWrapper::utils::getset<Example, const char*, &Example::GetCString, &Example::SetCString> },
+	{ "getCStringFunc", luaWrapper::utils::get<Example, const char*, &Example::getCString> },
+	{ "setCStringFunc", luaWrapper::utils::set<Example, const char*, &Example::setCString> },
+	{ "CStringFunc", luaWrapper::utils::getSet<Example, const char*, &Example::getCString, &Example::setCString> },
 	
-	{ "getNumberFunc", luaWrapper::utils::get<Example, double, &Example::GetNumber> },
-	{ "setNumberFunc", luaWrapper::utils::set<Example, double, &Example::SetNumber> },
-	{ "NumberFunc", luaWrapper::utils::getset<Example, double, &Example::GetNumber, &Example::SetNumber> },
+	{ "getNumberFunc", luaWrapper::utils::get<Example, double, &Example::getNumber> },
+	{ "setNumberFunc", luaWrapper::utils::set<Example, double, &Example::setNumber> },
+	{ "NumberFunc", luaWrapper::utils::getSet<Example, double, &Example::getNumber, &Example::setNumber> },
 	
-	{ "getFloatNumberFunc", luaWrapper::utils::get<Example, float, &Example::GetFloatNumber> },
-	{ "setFloatNumberFunc", luaWrapper::utils::set<Example, float, &Example::SetFloatNumber> },
-	{ "FloatNumberFunc", luaWrapper::utils::getset<Example, float, &Example::GetFloatNumber, &Example::SetFloatNumber> },
+	{ "getFloatNumberFunc", luaWrapper::utils::get<Example, float, &Example::getFloatNumber> },
+	{ "setFloatNumberFunc", luaWrapper::utils::set<Example, float, &Example::setFloatNumber> },
+	{ "FloatNumberFunc", luaWrapper::utils::getSet<Example, float, &Example::getFloatNumber, &Example::setFloatNumber> },
 	
-	{ "getPtrFunc", luaWrapper::utils::get<Example, Example, &Example::GetPtr> },
-	{ "setPtrFunc", luaWrapper::utils::set<Example, Example, &Example::SetPtr> },
-	{ "PtrFunc", luaWrapper::utils::getset<Example, Example, &Example::GetPtr, &Example::SetPtr> },
+	{ "getPtrFunc", luaWrapper::utils::get<Example, Example, &Example::getPtr> },
+	{ "setPtrFunc", luaWrapper::utils::set<Example, Example, &Example::setPtr> },
+	{ "PtrFunc", luaWrapper::utils::getSet<Example, Example, &Example::getPtr, &Example::setPtr> },
 	
 	// In order to use luaWrapper::utils::get and luaWrapper::utils::set on non-primitive types, you must define luaWrapper::utils::to
 	// and luaWrapper::utils::check for that type.
 	// See LuaCustomTypes.hpp for an example involving etk::String and Vector2D
-	{ "getCPPStringFunc", luaWrapper::utils::get<Example, etk::String, &Example::GetCPPString> },
-	{ "setCPPStringFunc", luaWrapper::utils::set<Example, etk::String, &Example::SetCPPString> },
-	{ "CPPStringFunc", luaWrapper::utils::getset<Example, etk::String, &Example::GetCPPString, &Example::SetCPPString> },
+	{ "getCPPStringFunc", luaWrapper::utils::get<Example, etk::String, &Example::getCPPString> },
+	{ "setCPPStringFunc", luaWrapper::utils::set<Example, etk::String, &Example::setCPPString> },
+	{ "CPPStringFunc", luaWrapper::utils::getSet<Example, etk::String, &Example::getCPPString, &Example::setCPPString> },
 	
-	{ "getVecFunc", luaWrapper::utils::get<Example, Vector2D, &Example::GetVec> },
-	{ "setSetFunc", luaWrapper::utils::set<Example, Vector2D, &Example::SetVec> },
-	{ "VecFunc", luaWrapper::utils::getset<Example, Vector2D, &Example::GetVec, &Example::SetVec> },
+	{ "getVecFunc", luaWrapper::utils::get<Example, Vector2D, &Example::getVec> },
+	{ "setsetFunc", luaWrapper::utils::set<Example, Vector2D, &Example::setVec> },
+	{ "VecFunc", luaWrapper::utils::getSet<Example, Vector2D, &Example::getVec, &Example::setVec> },
 	
-	{ "DoSomething", luaWrapperUtils_func(&Example::DoSomething) },
-	{ "DoSomething2", luaWrapperUtils_func(&Example::DoSomething2) },
+	{ "doSomething", luaWrapperUtils_func(&Example::doSomething) },
+	{ "doSomething2", luaWrapperUtils_func(&Example::doSomething2) },
 	
 	//{ "DoSomethingElse1", luaWrapper::utils::funcsig(int, Example, DoSomethingElse, int, int) },
 	//{ "DoSomethingElse2", luaWrapper::utils::funcsig(int, Example, DoSomethingElse, float) },
 	{ NULL, NULL }
 };
 
-int luaopen_Example(lua_State* _L) {
-    luaWrapper::registerElement<Example>(_L, "Example", NULL, Example_metatable);
+int luaopen_Example(luaWrapper:Lua& _lua) {
+    _lua.registerElement<Example>("Example", NULL, Example_metatable);
     return 1;
 }
 
