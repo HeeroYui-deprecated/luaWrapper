@@ -1,9 +1,6 @@
-#include <iostream>
-#include <lua/lua.h>
-#include <lua/lualib.h>
-#include <lua/lauxlib.h>
 #include <test-debug/debug.hpp>
 #include <etk/etk.hpp>
+#include <luaWrapper/luaWrapper.hpp>
 
 
 #include "LuaBankAccount.hpp"
@@ -32,13 +29,11 @@ int main(int _argc, const char *_argv[]) {
 		TEST_ERROR("missing file...");
 		usage();
 	}
-	lua_State* L = luaL_newstate();
-	luaL_openlibs(L);
-	luaopen_BankAccount(L);
-	if (luaL_dofile(L, inputFileName.c_str())) {
-		TEST_PRINT(lua_tostring(L, -1));
+	{
+		luaWrapper::Lua lua;
+		luaopen_BankAccount(lua.getState());
+		lua.executeFile(inputFileName);
 	}
-	lua_close(L);
 	TEST_PRINT("END SAMPLE 1");
 	return 0;
 }

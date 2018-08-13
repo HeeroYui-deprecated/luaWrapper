@@ -36,9 +36,11 @@ def configure(target, my_module):
 	    'ememory'
 	    ])
 	my_module.add_src_file([
+	    'luaWrapper/debug.cpp',
 	    'luaWrapper/luaWrapperEtk.cpp',
 	    ])
 	my_module.add_header_file([
+	    'luaWrapper/debug.hpp',
 	    'luaWrapper/luaWrapper.hpp',
 	    'luaWrapper/luaWrapperUtil.hpp',
 	    ])

@@ -6,6 +6,8 @@
 #include <test-debug/debug.hpp>
 #include <etk/etk.hpp>
 
+#include <luaWrapper/luaWrapper.hpp>
+
 #include "LuaExample.hpp"
 
 static void usage() {
@@ -32,13 +34,11 @@ int main(int _argc, const char *_argv[]) {
 		TEST_ERROR("missing file...");
 		usage();
 	}
-	lua_State* L = luaL_newstate();
-	luaL_openlibs(L);
-	luaopen_Example(L);
-	if (luaL_dofile(L, inputFileName.c_str())) {
-		TEST_PRINT(lua_tostring(L, -1));
+	{
+		luaWrapper::Lua lua;
+		luaopen_Example(lua.getState());
+		lua.executeFile(inputFileName);
 	}
-	lua_close(L);
 	TEST_PRINT("END SAMPLE 2");
 	return 0;
 }
