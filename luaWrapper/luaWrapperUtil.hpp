@@ -29,69 +29,57 @@ namespace luaWrapper {
 		/**
 		 * @brief This template removes reference and const qualifier from the type
 		 */
-		template <typename T> struct remove_cr {
-			typedef typename std::remove_const<typename std::remove_reference<T>::type>::type type;
+		template <typename LUAW_TYPE> struct remove_cr {
+			typedef typename std::remove_const<typename std::remove_reference<LUAW_TYPE>::type>::type type;
 		};
 		
-		/**
-		 * A set of templated luaL_check and lua_push functions for use in the getters
-		 * and setters below
-		 *
-		 * It is often useful to override luaWrapper::utils::check, luaWrapper::utils::to and/or luaWrapper::utils::push to
-		 * operate on your own simple types rather than register your type with
-		 * LuaWrapper, especially with small objects.
-		 */
-		
-		template<typename U> U check(lua_State* _L, int _index);
-		template<typename U> U to(lua_State* _L, int _index);
-		template<typename U> void push(lua_State* _L, const U& _value);
 		
 		/**
 		 * This is slightly different than the previous three functions in that you
 		 * shouldn't need to write your own version of it, since it uses check
 		 * automatically.
 		 */
-		template<typename U> U opt(lua_State* _L, int _index, const U& _fallback = U()) {
-			if (lua_isnil(_L, _index)) {
+		template<typename U> U opt(lua_State* _luaState, int _index, const U& _fallback = U()) {
+			if (lua_isnil(_luaState, _index)) {
 				return _fallback;
 			} else {
-				return luaWrapper::utils::check<U>(_L, _index);
+				return luaWrapper::utils::check<U>(_luaState, _index);
 			}
 		}
 		
 		/**
 		 * These are just some functions I've always felt should exist
 		 */
-		template <typename U> inline U getfield(lua_State* _L, int _index, const char* _field) {
+		template <typename U> inline U getfield(lua_State* _luaState, int _index, const char* _field) {
 			static_assert(!LUAW_STD::is_same<U, const char*>::value,
 				"luaWrapper::utils::getfield is not safe to use on const char*'s. (The string will be popped from the stack.)");
-			lua_getfield(_L, _index, _field);
-			U val = luaWrapper::utils::to<U>(_L, -1);
-			lua_pop(_L, 1);
+			lua_getfield(_luaState, _index, _field);
+			U val = luaWrapper::utils::to<U>(_luaState, -1);
+			lua_pop(_luaState, 1);
 			return val;
 		}
 		
-		template <typename U> inline U checkfield(lua_State* _L, int _index, const char* _field) {
+		template <typename U> inline U checkfield(lua_State* _luaState, int _index, const char* _field) {
 			static_assert(!LUAW_STD::is_same<U, const char*>::value,
 				"luaWrapper::utils::checkfield is not safe to use on const char*'s. (The string will be popped from the stack.)");
-			lua_getfield(_L, _index, _field);
-			U val = luaWrapper::utils::check<U>(_L, -1);
-			lua_pop(_L, 1);
+			lua_getfield(_luaState, _index, _field);
+			U val = luaWrapper::utils::check<U>(_luaState, -1);
+			lua_pop(_luaState, 1);
 			return val;
 		}
 		
-		template <typename U> inline U optfield(lua_State* _L, int _index, const char* _field, const U& _fallback = U()) {
+		template <typename U> inline U optfield(lua_State* _luaState, int _index, const char* _field, const U& _fallback = U()) {
 			static_assert(!LUAW_STD::is_same<U, const char*>::value,
 				"luaWrapper::utils::getfield is not safe to use on const char*'s. (The string will be popped from the stack.)");
-			lua_getfield(_L, _index, _field);
-			U val = luaWrapper::utils::opt<U>(_L, -1, _fallback);
-			lua_pop(_L, 1);
+			lua_getfield(_luaState, _index, _field);
+			U val = luaWrapper::utils::opt<U>(_luaState, -1, _fallback);
+			lua_pop(_luaState, 1);
 			return val;
 		}
 		
-		template <typename U> inline void setfield(lua_State* _L, int _index, const char* _field, U _val) {
-			luaWrapper::utils::push<U>(_L, _val);
-			lua_setfield(_L, luaWrapper::correctindex(_L, _index, 1), _field);
+		template <typename U> inline void setfield(lua_State* _luaState, int _index, const char* _field, U _val) {
+			luaWrapper::utils::push<U>(_luaState, _val);
+			lua_setfield(_luaState, luaWrapper::correctindex(_luaState, _index, 1), _field);
 		}
 		
 		/** A set of trivial getter and setter templates. These templates are designed
@@ -121,9 +109,9 @@ namespace luaWrapper {
 		 * }
 		 *
 		 * Getters and setters must have one of the following signatures:
-		 *	void T::Setter(U _value);
-		 *	void T::Setter(U* _value);
-		 *	void T::Setter(const U& _value);
+		 *	void LUAW_TYPE::Setter(U _value);
+		 *	void LUAW_TYPE::Setter(U* _value);
+		 *	void LUAW_TYPE::Setter(const U& _value);
 		 *	U Getter() const;
 		 *	U* Getter() const;
 		 *
@@ -141,211 +129,211 @@ namespace luaWrapper {
 		 * In a Lua script, you can now use foo:GetBar(), foo:SetBar() and foo:Bar()
 		 */
 		
-		template <typename T, typename U, U T::*Member> int get(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
-			luaWrapper::utils::push<U>(_L, obj.get()->*Member);
+		template <typename LUAW_TYPE, typename U, U LUAW_TYPE::*Member> int get(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
+			luaWrapper::utils::push<U>(_luaState, obj.get()->*Member);
 			return 1;
 		}
 		
-		template <typename T, typename U, U* T::*Member> int get(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
-			luaWrapper::push<U>(_L, obj.get()->*Member);
+		template <typename LUAW_TYPE, typename U, U* LUAW_TYPE::*Member> int get(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
+			luaWrapper::push<U>(_luaState, obj.get()->*Member);
 			return 1;
 		}
 		
-		template <typename T, typename U, U (T::*Getter)() const> int get(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
-			luaWrapper::utils::push<U>(_L, (obj.get()->*Getter)());
+		template <typename LUAW_TYPE, typename U, U (LUAW_TYPE::*Getter)() const> int get(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
+			luaWrapper::utils::push<U>(_luaState, (obj.get()->*Getter)());
 			return 1;
 		}
 		
-		template <typename T, typename U, const U& (T::*Getter)() const> int get(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
-			luaWrapper::utils::push<U>(_L, (obj.get()->*Getter)());
+		template <typename LUAW_TYPE, typename U, const U& (LUAW_TYPE::*Getter)() const> int get(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
+			luaWrapper::utils::push<U>(_luaState, (obj.get()->*Getter)());
 			return 1;
 		}
 		
-		template <typename T, typename U, U* (T::*Getter)() const> int get(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
-			luaWrapper::push<U>(_L, (obj.get()->*Getter)());
+		template <typename LUAW_TYPE, typename U, U* (LUAW_TYPE::*Getter)() const> int get(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
+			luaWrapper::push<U>(_luaState, (obj.get()->*Getter)());
 			return 1;
 		}
 		
-		template <typename T, typename U, U T::*Member> int set(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, U LUAW_TYPE::*Member> int set(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (obj != null) {
-				obj.get()->*Member = luaWrapper::utils::check<U>(_L, 2);
+				obj.get()->*Member = luaWrapper::utils::check<U>(_luaState, 2);
 			}
 			return 0;
 		}
 		
-		template <typename T, typename U, U* T::*Member> int set(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, U* LUAW_TYPE::*Member> int set(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (obj != null) {
-				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_L, 2);
+				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_luaState, 2);
 				obj.get()->*Member = member.get();
 			}
 			return 0;
 		}
 		
-		template <typename T, typename U, const U* T::*Member> int set(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, const U* LUAW_TYPE::*Member> int set(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (obj != null) {
-				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_L, 2);
+				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_luaState, 2);
 				obj.get()->*Member = member.get();
 			}
 			return 0;
 		}
 		
-		template <typename T, typename U, const U* T::*Member> int setAndRelease(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, const U* LUAW_TYPE::*Member> int setAndRelease(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (obj != null) {
-				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_L, 2);
+				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_luaState, 2);
 				obj.get()->*Member = member.get();
 				if (member) {
-					luaWrapper::release<U>(_L, member);
+					luaWrapper::release<U>(_luaState, member);
 				}
 			}
 			return 0;
 		}
 		
-		template <typename T, typename U, void (T::*Setter)(U)> int set(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, void (LUAW_TYPE::*Setter)(U)> int set(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (obj != null) {
-				(obj.get()->*Setter)(luaWrapper::utils::check<U>(_L, 2));
+				(obj.get()->*Setter)(luaWrapper::utils::check<U>(_luaState, 2));
 			}
 			return 0;
 		}
 		
-		template <typename T, typename U, void (T::*Setter)(const U&)> int set(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, void (LUAW_TYPE::*Setter)(const U&)> int set(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (obj != null) {
-				(obj.get()->*Setter)(luaWrapper::utils::check<U>(_L, 2));
+				(obj.get()->*Setter)(luaWrapper::utils::check<U>(_luaState, 2));
 			}
 			return 0;
 		}
 		
-		template <typename T, typename U, void (T::*Setter)(U*)> int set(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, void (LUAW_TYPE::*Setter)(U*)> int set(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (obj != null) {
-				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_L, 2);
+				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_luaState, 2);
 				(obj.get()->*Setter)(member.get());
 			}
 			return 0;
 		}
 		
-		template <typename T, typename U, void (T::*Setter)(U*)> int setAndRelease(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, void (LUAW_TYPE::*Setter)(U*)> int setAndRelease(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (obj != null) {
-				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_L, 2);
+				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_luaState, 2);
 				(obj.get()->*Setter)(member);
 				if (member) {
-					luaWrapper::release<U>(_L, member);
+					luaWrapper::release<U>(_luaState, member);
 				}
 			}
 			return 0;
 		}
 		
-		template <typename T, typename U, U T::*Member> int getSet(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, U LUAW_TYPE::*Member> int getSet(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (    obj != null
-			     && lua_gettop(_L) >= 2) {
-				obj.get()->*Member = luaWrapper::utils::check<U>(_L, 2);
+			     && lua_gettop(_luaState) >= 2) {
+				obj.get()->*Member = luaWrapper::utils::check<U>(_luaState, 2);
 				return 0;
 			} else {
-				luaWrapper::utils::push<U>(_L, obj.get()->*Member);
+				luaWrapper::utils::push<U>(_luaState, obj.get()->*Member);
 				return 1;
 			}
 		}
 		
-		template <typename T, typename U, U* T::*Member> int getSet(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, U* LUAW_TYPE::*Member> int getSet(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (    obj != null
-			     && lua_gettop(_L) >= 2) {
-				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_L, 2);
+			     && lua_gettop(_luaState) >= 2) {
+				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_luaState, 2);
 				obj.get()->*Member = member.get();
 				return 0;
 			} else {
-				luaWrapper::push<U>(_L, obj.get()->*Member);
+				luaWrapper::push<U>(_luaState, obj.get()->*Member);
 				return 1;
 			}
 		}
 		
-		template <typename T, typename U, U* T::*Member> int getSetAndRelease(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, U* LUAW_TYPE::*Member> int getSetAndRelease(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (    obj != null
-			     && lua_gettop(_L) >= 2) {
-				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_L, 2);
+			     && lua_gettop(_luaState) >= 2) {
+				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_luaState, 2);
 				obj.get()->*Member = member.get();
 				if (member)
-					luaWrapper::release<U>(_L, member);
+					luaWrapper::release<U>(_luaState, member);
 				return 0;
 			} else {
-				luaWrapper::push<U>(_L, obj.get()->*Member);
+				luaWrapper::push<U>(_luaState, obj.get()->*Member);
 				return 1;
 			}
 		}
 		
-		template <typename T, typename U, U (T::*Getter)() const, void (T::*Setter)(U)> int getSet(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, U (LUAW_TYPE::*Getter)() const, void (LUAW_TYPE::*Setter)(U)> int getSet(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (    obj != null
-			     && lua_gettop(_L) >= 2) {
-				(obj.get()->*Setter)(luaWrapper::utils::check<U>(_L, 2));
+			     && lua_gettop(_luaState) >= 2) {
+				(obj.get()->*Setter)(luaWrapper::utils::check<U>(_luaState, 2));
 				return 0;
 			} else {
-				luaWrapper::utils::push<U>(_L, (obj.get()->*Getter)());
+				luaWrapper::utils::push<U>(_luaState, (obj.get()->*Getter)());
 				return 1;
 			}
 		}
 		
-		template <typename T, typename U, U (T::*Getter)() const, void (T::*Setter)(const U&)> int getSet(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, U (LUAW_TYPE::*Getter)() const, void (LUAW_TYPE::*Setter)(const U&)> int getSet(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (    obj != null
-			     && lua_gettop(_L) >= 2) {
-				(obj.get()->*Setter)(luaWrapper::utils::check<U>(_L, 2));
+			     && lua_gettop(_luaState) >= 2) {
+				(obj.get()->*Setter)(luaWrapper::utils::check<U>(_luaState, 2));
 				return 0;
 			} else {
-				luaWrapper::utils::push<U>(_L, (obj.get()->*Getter)());
+				luaWrapper::utils::push<U>(_luaState, (obj.get()->*Getter)());
 				return 1;
 			}
 		}
 		
-		template <typename T, typename U, const U& (T::*Getter)() const, void (T::*Setter)(const U&)> int getSet(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, const U& (LUAW_TYPE::*Getter)() const, void (LUAW_TYPE::*Setter)(const U&)> int getSet(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (    obj != null
-			     && lua_gettop(_L) >= 2) {
-				(obj.get()->*Setter)(luaWrapper::utils::check<U>(_L, 2));
+			     && lua_gettop(_luaState) >= 2) {
+				(obj.get()->*Setter)(luaWrapper::utils::check<U>(_luaState, 2));
 				return 0;
 			} else {
-				luaWrapper::utils::push<U>(_L, (obj.get()->*Getter)());
+				luaWrapper::utils::push<U>(_luaState, (obj.get()->*Getter)());
 				return 1;
 			}
 		}
 		
-		template <typename T, typename U, U* (T::*Getter)() const, void (T::*Setter)(U*)> int getSet(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, U* (LUAW_TYPE::*Getter)() const, void (LUAW_TYPE::*Setter)(U*)> int getSet(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (    obj != null
-			     && lua_gettop(_L) >= 2) {
-				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_L, 2);
+			     && lua_gettop(_luaState) >= 2) {
+				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_luaState, 2);
 				(obj.get()->*Setter)(member.get());
 				return 0;
 			} else {
-				luaWrapper::push<U>(_L, (obj.get()->*Getter)());
+				luaWrapper::push<U>(_luaState, (obj.get()->*Getter)());
 				return 1;
 			}
 		}
 		
-		template <typename T, typename U, U* (T::*Getter)() const, void (T::*Setter)(U*)> int getSetAndRelease(lua_State* _L) {
-			ememory::SharedPtr<T> obj = luaWrapper::check<T>(_L, 1);
+		template <typename LUAW_TYPE, typename U, U* (LUAW_TYPE::*Getter)() const, void (LUAW_TYPE::*Setter)(U*)> int getSetAndRelease(lua_State* _luaState) {
+			ememory::SharedPtr<LUAW_TYPE> obj = luaWrapper::check<LUAW_TYPE>(_luaState, 1);
 			if (    obj != null
-			     && lua_gettop(_L) >= 2) {
-				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_L, 2);
+			     && lua_gettop(_luaState) >= 2) {
+				ememory::SharedPtr<U> member = luaWrapper::opt<U>(_luaState, 2);
 				(obj.get()->*Setter)(member);
 				if (member)
-					luaWrapper::release<U>(_L, member);
+					luaWrapper::release<U>(_luaState, member);
 				return 0;
 			} else {
-				luaWrapper::push<U>(_L, (obj.get()->*Getter)());
+				luaWrapper::push<U>(_luaState, (obj.get()->*Getter)());
 				return 1;
 			}
 		}
@@ -461,28 +449,28 @@ namespace luaWrapper {
 		struct MemberFuncWrapper;
 		
 		template<class LUAW_TYPE, class ReturnType, class... Args, ReturnType(LUAW_TYPE::*MemberFunc)(Args...)>
-		struct MemberFuncWrapper<ReturnType (T::*)(Args...), MemberFunc> {
+		struct MemberFuncWrapper<ReturnType (LUAW_TYPE::*)(Args...), MemberFunc> {
 			public:
-				static int call(lua_State* _L) {
-					return callImpl(_L, makeIntRange<2,sizeof...(Args)>());
+				static int call(lua_State* _luaState) {
+					return callImpl(_luaState, makeIntRange<2,sizeof...(Args)>());
 				}
 			private:
-				template<int... indices> static int callImpl(lua_State* _L, IntPack<indices...>) {
-					luaWrapper::utils::push<ReturnType>(_L, ((*luaWrapper::check<LUAW_TYPE>(_L, 1)).*MemberFunc)(luaWrapper::utils::check<typename luaWrapper::utils::remove_cr<Args>::type>(_L, indices)...));
+				template<int... indices> static int callImpl(lua_State* _luaState, IntPack<indices...>) {
+					luaWrapper::utils::push<ReturnType>(_luaState, ((*luaWrapper::check<LUAW_TYPE>(_luaState, 1)).*MemberFunc)(luaWrapper::utils::check<typename luaWrapper::utils::remove_cr<Args>::type>(_luaState, indices)...));
 					return 1;
 				}
 		};
 		
 		template<class LUAW_TYPE, class... Args, void(LUAW_TYPE::*MemberFunc)(Args...)>
-		struct MemberFuncWrapper<void(T::*)(Args...), MemberFunc> {
+		struct MemberFuncWrapper<void(LUAW_TYPE::*)(Args...), MemberFunc> {
 			public:
-				static int call(lua_State* _L) {
-					return callImpl(_L, luaWrapper::utils::makeIntRange<2, sizeof...(Args)>());
+				static int call(lua_State* _luaState) {
+					return callImpl(_luaState, luaWrapper::utils::makeIntRange<2, sizeof...(Args)>());
 				}
 			private:
 				template<int... indices>
-				static int callImpl(lua_State* _L, IntPack<indices...>) {
-					((*luaWrapper::check<T>(_L, 1)).*MemberFunc)(luaWrapper::utils::check<typename luaWrapper::utils::remove_cr<Args>::type>(_L, indices)...);
+				static int callImpl(lua_State* _luaState, IntPack<indices...>) {
+					((*luaWrapper::check<LUAW_TYPE>(_luaState, 1)).*MemberFunc)(luaWrapper::utils::check<typename luaWrapper::utils::remove_cr<Args>::type>(_luaState, indices)...);
 					return 0;
 				}
 		};
@@ -498,12 +486,12 @@ namespace luaWrapper {
 		template<class ReturnType, class... Args, ReturnType(*LUAW_FUNCTION)(Args...)>
 		struct StaticFuncWrapper<ReturnType(*)(Args...), LUAW_FUNCTION> {
 			public:
-				static int call(lua_State* _L) {
-					return callImpl(_L, luaWrapper::utils::makeIntRange<2,sizeof...(Args)>());
+				static int call(lua_State* _luaState) {
+					return callImpl(_luaState, luaWrapper::utils::makeIntRange<2,sizeof...(Args)>());
 				}
 			private:
-				template<int... indices> static int callImpl(lua_State* _L, IntPack<indices...>) {
-					luaWrapper::utils::push<ReturnType>(_L, (*LUAW_FUNCTION)(luaWrapper::utils::check<typename luaWrapper::utils::remove_cr<Args>::type>(_L, indices)...));
+				template<int... indices> static int callImpl(lua_State* _luaState, IntPack<indices...>) {
+					luaWrapper::utils::push<ReturnType>(_luaState, (*LUAW_FUNCTION)(luaWrapper::utils::check<typename luaWrapper::utils::remove_cr<Args>::type>(_luaState, indices)...));
 					return 1;
 				}
 		};
@@ -511,13 +499,13 @@ namespace luaWrapper {
 		template<class... Args, void(*LUAW_FUNCTION)(Args...)>
 		struct StaticFuncWrapper<void(*)(Args...), LUAW_FUNCTION> {
 			public:
-				static int call(lua_State* _L) {
-					return callImpl(_L, luaWrapper::utils::makeIntRange<2, sizeof...(Args)>());
+				static int call(lua_State* _luaState) {
+					return callImpl(_luaState, luaWrapper::utils::makeIntRange<2, sizeof...(Args)>());
 				}
 			private:
 				template<int... indices>
-				static int callImpl(lua_State* _L, luaWrapper::utils::IntPack<indices...>) {
-					(*LUAW_FUNCTION)(luaWrapper::utils::check<typename luaWrapper::utils::remove_cr<Args>::type>(_L, indices)...);
+				static int callImpl(lua_State* _luaState, luaWrapper::utils::IntPack<indices...>) {
+					(*LUAW_FUNCTION)(luaWrapper::utils::check<typename luaWrapper::utils::remove_cr<Args>::type>(_luaState, indices)...);
 					return 0;
 				}
 		};
@@ -539,13 +527,13 @@ namespace luaWrapper {
 		 * foo = Foo.new()
 		 * foo2 = foo:clone()
 		 */
-		template <typename LUAW_TYPE> int clone(lua_State* _L) {
-			T* obj = new T(*luaWrapper::check<LUAW_TYPE>(_L, 1));
-			lua_remove(_L, 1); // ...
-			int numargs = lua_gettop(_L);
-			luaWrapper::push<T>(_L, obj); // ... clone
-			luaWrapper::hold<T>(_L, obj);
-			luaWrapper::postconstructor<LUAW_TYPE>(_L, numargs);
+		template <typename LUAW_TYPE> int clone(lua_State* _luaState) {
+			LUAW_TYPE* obj = new LUAW_TYPE(*luaWrapper::check<LUAW_TYPE>(_luaState, 1));
+			lua_remove(_luaState, 1); // ...
+			int numargs = lua_gettop(_luaState);
+			luaWrapper::push<LUAW_TYPE>(_luaState, obj); // ... clone
+			luaWrapper::hold<LUAW_TYPE>(_luaState, obj);
+			luaWrapper::postconstructor<LUAW_TYPE>(_luaState, numargs);
 			return 1;
 		}
 		
@@ -567,17 +555,17 @@ namespace luaWrapper {
 		 * After the object is constructed, luaWrapper::utils::build will do the equivalent of
 		 * calling f:X(10) and f:Y(20).
 		 */
-		template <typename LUAW_TYPE> int build(lua_State* _L) {
+		template <typename LUAW_TYPE> int build(lua_State* _luaState) {
 			// obj {}
-			lua_insert(_L, -2); // {} obj
-			if (lua_type(_L, 1) == LUA_TTABLE) {
-				for (lua_pushnil(_L); lua_next(_L, 1); lua_pop(_L, 1)) {
+			lua_insert(_luaState, -2); // {} obj
+			if (lua_type(_luaState, 1) == LUA_TTABLE) {
+				for (lua_pushnil(_luaState); lua_next(_luaState, 1); lua_pop(_luaState, 1)) {
 					// {} obj k v
-					lua_pushvalue(_L, -2); // {} obj k v k
-					lua_gettable(_L, -4); // {} obj k v ud[k]
-					lua_pushvalue(_L, -4); // {} obj k v ud[k] ud
-					lua_pushvalue(_L, -3); // {} obj k v ud[k] ud v
-					lua_call(_L, 2, 0); // {} obj k v
+					lua_pushvalue(_luaState, -2); // {} obj k v k
+					lua_gettable(_luaState, -4); // {} obj k v ud[k]
+					lua_pushvalue(_luaState, -4); // {} obj k v ud[k] ud
+					lua_pushvalue(_luaState, -3); // {} obj k v ud[k] ud v
+					lua_call(_luaState, 2, 0); // {} obj k v
 				}
 				// {} ud
 			}
@@ -595,30 +583,30 @@ namespace luaWrapper {
 		 *
 		 * e.g.
 		 *
-		 * Foo* parent = luaWrapper::check<Foo>(_L, 1);
-		 * Bar* child = luaWrapper::check<Bar>(_L, 2);
+		 * Foo* parent = luaWrapper::check<Foo>(_luaState, 1);
+		 * Bar* child = luaWrapper::check<Bar>(_luaState, 2);
 		 * if (parent && child)
 		 * {
-		 *	 luaWrapper::utils::store<Bar>(_L, 1, "Children");
+		 *	 luaWrapper::utils::store<Bar>(_luaState, 1, "Children");
 		 *	 parent->AddChild(child);
 		 * }
 		 */
-		template <typename T> void store(lua_State* _L, int _index, const char* _storagetable, const char* _key = NULL) {
+		template <typename LUAW_TYPE> void store(lua_State* _luaState, int _index, const char* _storagetable, const char* _key = NULL) {
 			// ... store ... obj store.storagetable
-			lua_getfield(_L, _index, _storagetable);
+			lua_getfield(_luaState, _index, _storagetable);
 			if (_key) {
 				// ... store ... obj store.storagetable key
-				lua_pushstring(_L, _key);
+				lua_pushstring(_luaState, _key);
 			} else {
 				// ... store ... obj store.storagetable key
-				LuaWrapper<T>::identifier(_L, luaWrapper::to<T>(_L, -2));
+				LuaWrapper<LUAW_TYPE>::identifier(_luaState, luaWrapper::to<LUAW_TYPE>(_luaState, -2));
 			}
 			// ... store ... obj store.storagetable key obj
-			lua_pushvalue(_L, -3);
+			lua_pushvalue(_luaState, -3);
 			// ... store ... obj store.storagetable
-			lua_settable(_L, -3);
+			lua_settable(_luaState, -3);
 			// ... store ... obj
-			lua_pop(_L, 1);
+			lua_pop(_luaState, 1);
 		}
 	}
 }

@@ -42,6 +42,7 @@
 #include <etk/typeInfo.hpp>
 #include <etk/Allocator.hpp>
 #include <etk/os/FSNode.hpp>
+#include <etk/Exception.hpp>
 
 #include <luaWrapper/debug.hpp>
 
@@ -54,6 +55,20 @@
 #define LUAW_WRAPPER_KEY "LuaWrapper"
 
 namespace luaWrapper {
+	namespace utils {
+		template<typename LUAW_TYPE> LUAW_TYPE check(lua_State* _luaState, int _index);
+		template<typename LUAW_TYPE> LUAW_TYPE to(lua_State* _luaState, int _index);
+		template<typename LUAW_TYPE> void push(lua_State* _luaState, const LUAW_TYPE& _value);
+	}
+	template<class LUAW_ARG, class ... LUAW_ARGS>
+	void setCallParameters(lua_State* _luaState) {
+		// nothing to do...
+	}
+	template<class LUAW_ARG, class ... LUAW_ARGS>
+	void setCallParameters(lua_State* _luaState, LUAW_ARG&& _value, LUAW_ARGS&&... _args) {
+		luaWrapper::utils::push<LUAW_ARG>(_luaState, _value);
+		setCallParameters(_luaState, _args...);
+	}
 	/**
 	 * @brief main interface of Lua engine.
 	 */
@@ -86,6 +101,26 @@ namespace luaWrapper {
 			}
 			lua_State* getState() {
 				return m_luaState;
+			}
+			template<class LUAW_RETURN_TYPE, class ... LUAW_ARGS>
+			LUAW_RETURN_TYPE call(const char* _functionName, LUAW_ARGS&&... _args) {
+				LUAW_RETURN_TYPE returnValue;
+				
+				/* push functions and arguments */
+				lua_getglobal(m_luaState, _functionName);  /* function to be called */
+				setCallParameters(m_luaState, _args ...);
+				
+				/* do the call (n arguments, 1 result) */
+				if (lua_pcall(m_luaState, int32_t(sizeof...(LUAW_ARGS)), 1, 0) != 0) {
+					ETK_THROW_EXCEPTION(etk::exception::RuntimeError(etk::String("error running function `") + _functionName +": " + lua_tostring(m_luaState, -1)));
+				}
+				/* retrieve result */
+				if (!lua_isnumber(m_luaState, -1)) {
+					ETK_THROW_EXCEPTION(etk::exception::RuntimeError(etk::String("function `") + _functionName +"`: must return a number"));
+				}
+				returnValue = lua_tonumber(m_luaState, -1);
+				lua_pop(m_luaState, 1);  /* pop returned value */
+				return returnValue;
 			}
 	};
 	
@@ -514,13 +549,6 @@ namespace luaWrapper {
 		lua_pop( _luaState, 1 );
 		return 0;
 	}
-	/*
-	    static int gc( lua_State* const L )
-	    {
-	        
-	        return 0;
-	    }
-	*/
 	/**
 	 * Thakes two tables and registers them with Lua to the table on the top of the
 	 * stack. 
@@ -529,21 +557,12 @@ namespace luaWrapper {
 	 */
 	inline void registerfuncs(lua_State* _luaState, const luaL_Reg _defaulttable[], const luaL_Reg _table[]) {
 		// ... T
-	#if LUA_VERSION_NUM == 502
 		if (_defaulttable) {
 			luaL_setfuncs(_luaState, _defaulttable, 0); // ... T
 		}
 		if (_table) {
 			luaL_setfuncs(_luaState, _table, 0); // ... T
 		}
-	#else
-		if (_defaulttable) {
-			luaL_register(_luaState, NULL, _defaulttable); // ... T
-		}
-		if (_table) {
-			luaL_register(_luaState, NULL, _table); // ... T
-		}
-	#endif
 	}
 	
 	/**
@@ -668,36 +687,36 @@ namespace luaWrapper {
 	}
 	
 	template <typename LUAW_TYPE>
-	void registerElement(lua_State* _luaState,
+	void registerElement(Lua& _lua,
 	                     const char* _classname,
 	                     const luaL_Reg* _table,
 	                     const luaL_Reg* _metatable,
 	                     ememory::SharedPtr<LUAW_TYPE> (*_allocator)(lua_State*),
 	                     void (*_identifier)(lua_State*, ememory::SharedPtr<LUAW_TYPE>)) {
-		setfuncs(_luaState, _classname, _table, _metatable, _allocator, _identifier); // ... T
-		lua_pushvalue(_luaState, -1); // ... LUAW_TYPE LUAW_TYPE
-		lua_setglobal(_luaState, _classname); // ... LUAW_TYPE
+		setfuncs(_lua.getState(), _classname, _table, _metatable, _allocator, _identifier); // ... T
+		lua_pushvalue(_lua.getState(), -1); // ... LUAW_TYPE LUAW_TYPE
+		lua_setglobal(_lua.getState(), _classname); // ... LUAW_TYPE
 	}
 	
 	template <typename LUAW_TYPE>
-	void registerElement(lua_State* _luaState,
+	void registerElement(Lua& _lua,
 	                     const char* _classname,
 	                     const luaL_Reg* _table,
 	                     const luaL_Reg* _metatable,
 	                     ememory::SharedPtr<LUAW_TYPE> (*_allocator)(lua_State*)) {
-		setfuncs(_luaState, _classname, _table, _metatable, _allocator, defaultidentifier<LUAW_TYPE>);
-		lua_pushvalue(_luaState, -1); // ... LUAW_TYPE LUAW_TYPE
-		lua_setglobal(_luaState, _classname); // ... LUAW_TYPE
+		setfuncs(_lua.getState(), _classname, _table, _metatable, _allocator, defaultidentifier<LUAW_TYPE>);
+		lua_pushvalue(_lua.getState(), -1); // ... LUAW_TYPE LUAW_TYPE
+		lua_setglobal(_lua.getState(), _classname); // ... LUAW_TYPE
 	}
 	
 	template <typename LUAW_TYPE>
-	void registerElement(lua_State* _luaState,
+	void registerElement(Lua& _lua,
 	                     const char* _classname,
 	                     const luaL_Reg* _table,
 	                     const luaL_Reg* _metatable) {
-		setfuncs(_luaState, _classname, _table, _metatable, defaultallocator<LUAW_TYPE>, defaultidentifier<LUAW_TYPE>); // ... T
-		lua_pushvalue(_luaState, -1); // ... T T
-		lua_setglobal(_luaState, _classname); // ... T
+		setfuncs(_lua.getState(), _classname, _table, _metatable, defaultallocator<LUAW_TYPE>, defaultidentifier<LUAW_TYPE>); // ... T
+		lua_pushvalue(_lua.getState(), -1); // ... T T
+		lua_setglobal(_lua.getState(), _classname); // ... T
 	}
 	
 	/**

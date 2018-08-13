@@ -133,7 +133,7 @@ static luaL_Reg Example_metatable[] = {
 };
 
 int luaopen_Example(luaWrapper:Lua& _lua) {
-    _lua.registerElement<Example>("Example", NULL, Example_metatable);
+    luaWrapper::registerElement<Example>(_lua, "Example", NULL, Example_metatable);
     return 1;
 }
 

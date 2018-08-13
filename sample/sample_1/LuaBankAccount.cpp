@@ -82,11 +82,12 @@ static luaL_Reg BankAccount_metatable[] = {
 };
 
 int luaopen_BankAccount(luaWrapper:Lua& _lua) {
-	_lua.registerElement<BankAccount>("BankAccount",
-	                                  BankAccount_table,
-	                                  BankAccount_metatable,
-	                                  BankAccount_new // If your class has a default constructor you can omit this argument, LuaWrapper will generate a default allocator for you.
-	                                  );
+	luaWrapper::registerElement<BankAccount>(_lua,
+	                                         "BankAccount",
+	                                         BankAccount_table,
+	                                         BankAccount_metatable,
+	                                         BankAccount_new
+	                                         );
 	return 1;
 }
 
