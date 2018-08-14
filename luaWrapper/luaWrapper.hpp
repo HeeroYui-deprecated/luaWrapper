@@ -60,14 +60,19 @@ namespace luaWrapper {
 		template<typename LUAW_TYPE> LUAW_TYPE to(lua_State* _luaState, int _index);
 		template<typename LUAW_TYPE> void push(lua_State* _luaState, const LUAW_TYPE& _value);
 	}
-	template<class LUAW_ARG, class ... LUAW_ARGS>
-	void setCallParameters(lua_State* _luaState) {
+	// end the recursive template...
+	inline void setCallParameters(lua_State* _luaState) {
 		// nothing to do...
+	}
+	template<class ... LUAW_ARGS>
+	void setCallParameters(lua_State* _luaState, const char* _value, LUAW_ARGS&&... _args) {
+		luaWrapper::utils::push<const char*>(_luaState, _value);
+		setCallParameters(_luaState, etk::forward<LUAW_ARGS>(_args)...);
 	}
 	template<class LUAW_ARG, class ... LUAW_ARGS>
 	void setCallParameters(lua_State* _luaState, LUAW_ARG&& _value, LUAW_ARGS&&... _args) {
 		luaWrapper::utils::push<LUAW_ARG>(_luaState, _value);
-		setCallParameters(_luaState, _args...);
+		setCallParameters(_luaState, etk::forward<LUAW_ARGS>(_args)...);
 	}
 	/**
 	 * @brief main interface of Lua engine.
@@ -102,28 +107,44 @@ namespace luaWrapper {
 			lua_State* getState() {
 				return m_luaState;
 			}
-			template<class LUAW_RETURN_TYPE, class ... LUAW_ARGS>
-			LUAW_RETURN_TYPE call(const char* _functionName, LUAW_ARGS&&... _args) {
-				LUAW_RETURN_TYPE returnValue;
-				
+		private:
+			template<class ... LUAW_ARGS>
+			void callGeneric(int32_t _numberReturn, const char* _functionName, LUAW_ARGS&&... _args) {
 				/* push functions and arguments */
 				lua_getglobal(m_luaState, _functionName);  /* function to be called */
-				setCallParameters(m_luaState, _args ...);
+				setCallParameters(m_luaState, etk::forward<LUAW_ARGS>(_args)...);
 				
 				/* do the call (n arguments, 1 result) */
-				if (lua_pcall(m_luaState, int32_t(sizeof...(LUAW_ARGS)), 1, 0) != 0) {
+				if (lua_pcall(m_luaState, int32_t(sizeof...(LUAW_ARGS)), _numberReturn, 0) != 0) {
 					ETK_THROW_EXCEPTION(etk::exception::RuntimeError(etk::String("error running function `") + _functionName +": " + lua_tostring(m_luaState, -1)));
 				}
-				/* retrieve result */
-				if (!lua_isnumber(m_luaState, -1)) {
-					ETK_THROW_EXCEPTION(etk::exception::RuntimeError(etk::String("function `") + _functionName +"`: must return a number"));
-				}
-				returnValue = lua_tonumber(m_luaState, -1);
-				lua_pop(m_luaState, 1);  /* pop returned value */
+			}
+		public:
+			/**
+			 * Call a lua function with some generic parameters (with return value).
+			 * @param[in] _functionName Funtion to call.
+			 * @param[in] _args... Multiple argument (what you want).
+			 * @return The specified type.
+			 */
+			template<class LUAW_RETURN_TYPE, class ... LUAW_ARGS>
+			LUAW_RETURN_TYPE call(const char* _functionName, LUAW_ARGS&&... _args) {
+				callGeneric(1, _functionName, etk::forward<LUAW_ARGS>(_args)...);
+				// retrieve result
+				LUAW_RETURN_TYPE returnValue = luaWrapper::utils::check<LUAW_RETURN_TYPE>(m_luaState, -1);
+				// pop returned value
+				lua_pop(m_luaState, 1);
 				return returnValue;
 			}
+			/**
+			 * Call a lua function with some generic parameters (WITHOUT return value).
+			 * @param[in] _functionName Funtion to call.
+			 * @param[in] _args... Multiple argument (what you want).
+			 */
+			template<class ... LUAW_ARGS>
+			void callVoid(const char* _functionName, LUAW_ARGS&&... _args) {
+				callGeneric(0, _functionName, etk::forward<LUAW_ARGS>(_args)...);
+			}
 	};
-	
 	/**
 	 * A simple utility function to adjust a given index
 	 * Useful for when a parameter index needs to be adjusted
