@@ -75,7 +75,7 @@ TEST(TestCCallLuaFunctionn, basicCallNotExist) {
 		print("x or y")
 	end
 	)#");
-	lua.callVoid("MyFunctionNameThatDoesNotExit", true, "TRESDF");
+	EXPECT_THROW(lua.callVoid("MyFunctionNameThatDoesNotExit", true, "TRESDF"), etk::exception::RuntimeError);
 }
 
 
